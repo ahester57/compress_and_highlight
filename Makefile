@@ -13,18 +13,21 @@ OBJECTS = $(patsubst %.cpp, %.o, ${SOURCES})
 
 default: all
 
-all: highlight
+all: highlight huffman
 
 %.o: %.cpp $(DEPS)
 	${CC} -c $^ -I ${IDIR} -I ${IOPENCV}
 
-highlight: $(OBJECTS)
+highlight: $(filter-out huffman.o, $(OBJECTS))
+	$(CC) -o $@ $^ $(CFLAGS)
+
+huffman: $(filter-out highlight.o, $(OBJECTS))
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
 	$(RM) $(OBJECTS) ${wildcard ${IDIR}/*.gch}
 
 destroy:
-	$(RM) $(OBJECTS) highlight ${wildcard ${IDIR}/*.gch}
+	$(RM) $(OBJECTS) highlight huffman ${wildcard ${IDIR}/*.gch}
 
 # https://www.cs.colby.edu/maxwell/courses/tutorials/maketutor/
