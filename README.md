@@ -36,7 +36,13 @@ equalization on the ROI and insert the equalized image back into its position. D
 #### Usage
 
 ```
+Usage: highlight.exe [params] filename
 
+        -h, --help (value:true)
+                show help message
+
+        filename (value:<none>)
+                input image
 
 ```
 
@@ -66,6 +72,12 @@ You should be able to count the number of bits in each code block.
 #### Usage
 
 ```
+Usage: huffman.exe [params] filename
 
+        -h, --help
+                show help message
+
+        filename (value:<none>)
+                input image
 
 ```
