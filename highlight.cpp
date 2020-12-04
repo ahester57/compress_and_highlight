@@ -4,6 +4,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <vector>
 #include <iostream>
@@ -11,13 +12,42 @@
 #include "./include/cla_parse.hpp"
 #include "./include/dir_func.hpp"
 #include "./include/img_struct.hpp"
-#include "./include/histo_func.hpp"
+#include "./include/string_helper.hpp"
 
 
+#define WINDOW_NAME "Highlight"
+
+// CLA variable
+std::string input_image;
+
+const uint INTENSITY_VALUES = 256;
+
+cv::Mat original_image;
+cv::Mat displayed_image;
+cv::Point center;
+
+
+// 'event loop' for keypresses
 int
 wait_key()
 {
     char key_pressed = cv::waitKey(0) & 255;
+    // 's' saves the current image
+    if (cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {
+        // this ends the program if window is closed
+        return 0;
+    }
+    if (key_pressed == 's') {
+        if (!displayed_image.empty()) {
+            write_img_to_file(
+                displayed_image,
+                "./out",
+                "output_" + input_image
+            );
+            cv::destroyAllWindows();
+            return 0;
+        }
+    }
     // 'q' or  <escape> quits out
     if (key_pressed == 27 || key_pressed == 'q') {
         cv::destroyAllWindows();
@@ -26,11 +56,10 @@ wait_key()
     return 1;
 }
 
+
 int
 main(int argc, const char** argv)
 {
-    // CLA variables
-    std::string input_image;
 
     // parse and save command line args
     int parse_result = parse_arguments(
@@ -40,21 +69,27 @@ main(int argc, const char** argv)
     if (parse_result != 1) return parse_result;
 
     // open image
-    img_struct_t* og_image = open_image(input_image.c_str(), true);
+    img_struct_t* og_image = open_image(input_image.c_str(), false);
 
     if (og_image == NULL) {
         std::cerr << "Could not open image :( " << input_image << std::endl;
         return -1;
     }
 
+    original_image = og_image->image;
+    original_image.copyTo(displayed_image);
+
     // display the original image
-    cv::imshow("original", og_image->image);
-    wait_key();
+    cv::imshow(WINDOW_NAME, displayed_image);
 
+    // define center
+    center = cv::Point(original_image.cols / 2, original_image.rows / 2);
 
-    // display the equalized image
-    cv::imshow("lomo", og_image->image);
-    wait_key();
+    // 'event loop' for keypresses
+    while (wait_key());
+
+    original_image.release();
+    displayed_image.release();
 
     return 0;
 }
