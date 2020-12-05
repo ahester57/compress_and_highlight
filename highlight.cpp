@@ -46,11 +46,16 @@ int
 wait_key()
 {
     char key_pressed = cv::waitKey(0) & 255;
-    // 's' saves the current image
     if (cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {
         // this ends the program if window is closed
         return 0;
     }
+    // 'o' displays the original image
+    if (key_pressed == 'o') {
+        og_image->image.copyTo(displayed_image);
+        cv::imshow(WINDOW_NAME, displayed_image);
+    }
+    // 's' saves the current image
     if (key_pressed == 's') {
         if (!displayed_image.empty()) {
             write_img_to_file(
