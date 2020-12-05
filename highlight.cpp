@@ -24,6 +24,7 @@ const uint INTENSITY_VALUES = 256;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
+cv::Mat roi;
 
 // SelectionStage
 struct SelectionState {
@@ -79,11 +80,23 @@ draw_rectangle()
     // deep keep to displayed_image, to only keep one rectangle one screen
     og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
 
+    cv::Rect rect = state.to_rect();
     // draw the rectangle on screen
-    cv::rectangle(displayed_image, state.to_rect(), cv::Scalar(6));
+    cv::rectangle(displayed_image, rect, cv::Scalar(6));
+
+    // if done, save the ROI
+    if (state.done) {
+        try {
+            displayed_image(rect).copyTo(roi);
+            cv::imshow("_cropped", roi);
+        } catch (...) {
+            assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
+        }
+    }
 
     // display the new image
     cv::imshow(WINDOW_NAME, displayed_image);
+
 }
 
 
@@ -98,6 +111,7 @@ mouse_callback(int event, int x, int y, int, void* )
             state.mouse_pos.x = x;
             state.mouse_pos.y = y;
             state.started = true;
+            state.done = false;
             break;
 
         case cv::EVENT_LBUTTONUP:
