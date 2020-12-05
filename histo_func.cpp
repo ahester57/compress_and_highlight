@@ -92,10 +92,8 @@ run_histogram_matching(cv::Mat image, std::string file_name)
 void
 build_intensity_map(cv::Mat src, uint* intensity_counts)
 {
-    if (src.channels() != 1) {
-        std::cerr << "Not a Grayscale Image" << std::endl;
-        throw "Not a Grayscale Image";
-    }
+    assert(src.channels() == 1);
+
     for (int r = 0; r < src.rows; r++) {
         for (int c = 0; c < src.cols; c++) {
             intensity_counts[(uint)src.at<uchar>(r, c)]++;
@@ -134,13 +132,9 @@ create_lookup_table(float* cdf, uint* lookup_table)
 cv::Mat
 apply_histogram(cv::Mat src, uint* lookup_table)
 {
+    assert(src.channels() == 1);
     cv::Mat dst = cv::Mat::zeros(cv::Size(src.cols, src.rows), src.type());
-    if (src.channels() == 1) {
-        std::cout << "Grayscale Image <uchar>" << std::endl;
-    } else {
-        std::cout << "Unknown Image. Goodbye." << std::endl;
-        return src;
-    }
+
     for (int r = 0; r < src.rows; r++) {
         for (int c = 0; c < src.cols; c++) {
             // channels is 1. grayscale

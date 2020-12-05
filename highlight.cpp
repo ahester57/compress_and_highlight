@@ -11,6 +11,7 @@
 
 #include "./include/cla_parse.hpp"
 #include "./include/dir_func.hpp"
+#include "./include/histo_func.hpp"
 #include "./include/img_struct.hpp"
 #include "./include/string_helper.hpp"
 
@@ -80,13 +81,13 @@ wait_key()
 
 // draw_rectangle on image
 void
-draw_rectangle()
+draw_rectangle(cv::Rect rect)
 {
     // deep keep to displayed_image, to only keep one rectangle one screen
     og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
 
     // draw the rectangle on screen
-    cv::rectangle(displayed_image, state.to_rect(), cv::Scalar(6));
+    cv::rectangle(displayed_image, rect, cv::Scalar(6));
 
     // display the new image
     cv::imshow(WINDOW_NAME, displayed_image);
@@ -94,14 +95,9 @@ draw_rectangle()
 
 // save the ROI to a cv::Mat
 void
-extract_roi()
+extract_roi(cv::Mat img, cv::Rect rect)
 {
-    try {
-        displayed_image(state.to_rect()).copyTo(roi);
-        cv::imshow("_cropped", roi);
-    } catch (...) {
-        assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
-    }
+    img(rect).copyTo(roi);
 }
 
 // dim the original image
@@ -110,25 +106,17 @@ dim_image(cv::Mat img)
 {
     // convert image to float
     cv::Mat dst;
-    img.convertTo(dst, CV_32FC3, 1/255.0);
+    img.convertTo(dst, CV_32F, 1/255.0);
 
-    for (int r = 0; r < dst.rows; r++) {
-        for (int c = 0; c < dst.cols; c++) {
-
-            cv::Vec3f pixel_dst = dst.at<cv::Vec3f>(r, c);
-
-            cv::Vec3f pixel_dim = { 0.0, 0.0, 0.0 };
-            // multiply pixels by 0.75
-            pixel_dst[0] *= 0.75;
-            pixel_dst[1] *= 0.75;
-            pixel_dst[2] *= 0.75;
-
-            dst.at<cv::Vec3f>(r, c) = pixel_dst;
+    for (int r = 0; r < dst.cols; r++) {
+        for (int c = 0; c < dst.rows; c++) {
+            dst.at<float>(r, c) = dst.at<float>(r, c) * 0.75;
         }
     }
 
     // convert back to CV_8UC3 and display
-    dst.convertTo(displayed_image, CV_8UC3, 255.0);
+    dst.convertTo(displayed_image, CV_8U, 255.0);
+
     // display the new image
     cv::imshow(WINDOW_NAME, displayed_image);
 }
@@ -137,12 +125,19 @@ dim_image(cv::Mat img)
 void
 on_rect_complete()
 {
-    // draw final rectangle
-    draw_rectangle();
-    // if done, save the ROI
-    extract_roi();
-    // dim the image
-    dim_image(og_image->image);
+    try {
+        // draw final rectangle
+        draw_rectangle(state.to_rect());
+        // if done, save the ROI
+        extract_roi(displayed_image, state.to_rect());
+        // dim the image
+        dim_image(displayed_image);
+        //
+        cv::Mat poop = run_equalization(roi);
+        cv::imshow("_cropped", poop);
+    } catch (...) {
+        assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
+    }
 }
 
 
@@ -171,7 +166,7 @@ mouse_callback(int event, int x, int y, int, void*)
             state.mouse_pos.x = x;
             state.mouse_pos.y = y;
             if (state.started) // draw rectangle in real time
-                draw_rectangle();
+                draw_rectangle(state.to_rect());
             break;
     }
 }
@@ -190,8 +185,8 @@ main(int argc, const char** argv)
 
     assert(input_image.length() > 0);
 
-    // open image, grayscale = false
-    og_image = open_image(input_image.c_str(), false);
+    // open image, grayscale = true
+    og_image = open_image(input_image.c_str(), true);
 
     assert(og_image != NULL);
 
