@@ -11,9 +11,9 @@
 
 #include "./include/cla_parse.hpp"
 #include "./include/dir_func.hpp"
-#include "./include/histo_func.hpp"
+// #include "./include/histo_func.hpp"
 #include "./include/img_struct.hpp"
-#include "./include/string_helper.hpp"
+// #include "./include/string_helper.hpp"
 
 
 #define WINDOW_NAME "Highlight"
@@ -25,7 +25,6 @@ const uint INTENSITY_VALUES = 256;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
-cv::Mat roi;
 
 // SelectionStage
 struct SelectionState {
@@ -93,10 +92,12 @@ draw_rectangle(cv::Rect rect)
 }
 
 // save the ROI to a cv::Mat
-void
+cv::Mat
 extract_roi(cv::Rect rect)
 {
-    displayed_image(rect).copyTo(roi);
+    cv::Mat dst;
+    displayed_image(rect).copyTo(dst);
+    return dst;
 }
 
 // dim the original image
@@ -120,12 +121,6 @@ dim_image(cv::Mat img)
     cv::imshow(WINDOW_NAME, displayed_image);
 }
 
-// insert ROI into displayed image
-void
-insert_roi(cv::Mat roi_to_insert)
-{
-    roi_to_insert.copyTo(displayed_image(state.to_rect()));
-}
 
 // post complete rectangle
 void
@@ -135,15 +130,16 @@ on_rect_complete()
         // draw final rectangle
         draw_rectangle(state.to_rect());
         // if done, save the ROI
-        extract_roi(state.to_rect());
+        cv::Mat roi = extract_roi(state.to_rect());
         // dim the image
         dim_image(displayed_image);
         // equalize region of interest
-        cv::Mat equalized_roi = run_equalization(roi);
+        cv::Mat equalized_roi;
+        cv::equalizeHist(roi, equalized_roi);
         // insert ROI into displayed image
-        insert_roi(equalized_roi);
+        equalized_roi.copyTo(displayed_image(state.to_rect()));
+        // show the final product
         cv::imshow(WINDOW_NAME, displayed_image);
-
     } catch (...) {
         assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
     }
