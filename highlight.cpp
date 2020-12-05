@@ -21,8 +21,6 @@
 // CLA variable
 std::string input_image;
 
-const uint INTENSITY_VALUES = 256;
-
 img_struct_t* og_image;
 cv::Mat displayed_image;
 
@@ -140,7 +138,11 @@ on_rect_complete()
         equalized_roi.copyTo(displayed_image(state.to_rect()));
         // show the final product
         cv::imshow(WINDOW_NAME, displayed_image);
+        state.done = true;
+        state.started = false;
     } catch (...) {
+        state.done = true;
+        state.started = false;
         assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
     }
 }
@@ -156,15 +158,12 @@ mouse_callback(int event, int x, int y, int, void*)
             state.selection_top_left.y = y;
             state.mouse_pos.x = x;
             state.mouse_pos.y = y;
-            state.started = true;
             state.done = false;
+            state.started = true;
             break;
-
         case cv::EVENT_LBUTTONUP:
-            state.started = false;
             state.selection_bottom_right.x = x;
             state.selection_bottom_right.y = y;
-            state.done = true;
             on_rect_complete();
             break;
         case cv::EVENT_MOUSEMOVE:
