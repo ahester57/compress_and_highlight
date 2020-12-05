@@ -104,6 +104,35 @@ extract_roi()
     }
 }
 
+// dim the original image
+void
+dim_image(cv::Mat img)
+{
+    // convert image to float
+    cv::Mat dst;
+    img.convertTo(dst, CV_32FC3, 1/255.0);
+
+    for (int r = 0; r < dst.rows; r++) {
+        for (int c = 0; c < dst.cols; c++) {
+
+            cv::Vec3f pixel_dst = dst.at<cv::Vec3f>(r, c);
+
+            cv::Vec3f pixel_dim = { 0.0, 0.0, 0.0 };
+            // multiply pixels by 0.75
+            pixel_dst[0] *= 0.75;
+            pixel_dst[1] *= 0.75;
+            pixel_dst[2] *= 0.75;
+
+            dst.at<cv::Vec3f>(r, c) = pixel_dst;
+        }
+    }
+
+    // convert back to CV_8UC3 and display
+    dst.convertTo(displayed_image, CV_8UC3, 255.0);
+    // display the new image
+    cv::imshow(WINDOW_NAME, displayed_image);
+}
+
 // post complete rectangle
 void
 on_rect_complete()
@@ -112,14 +141,16 @@ on_rect_complete()
     draw_rectangle();
     // if done, save the ROI
     extract_roi();
+    // dim the image
+    dim_image(og_image->image);
 }
 
 
 void
-mouse_callback(int event, int x, int y, int, void* )
+mouse_callback(int event, int x, int y, int, void*)
 {
     // https://gist.github.com/guimeira/541e9056364b9491452b7027f12536cc
-    switch(event) {
+    switch (event) {
         case cv::EVENT_LBUTTONDOWN:
             state.selection_top_left.x = x;
             state.selection_top_left.y = y;
