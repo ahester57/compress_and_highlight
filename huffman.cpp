@@ -78,12 +78,26 @@ main(int argc, const char** argv)
     // deep keep to displayed_image
     og_image->image.copyTo(displayed_image);
 
-    // define center
-    center = cv::Point(displayed_image.cols / 2, displayed_image.rows / 2);
-
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
+    int channels[] = { 0 };
+    float range[] = { 0, 256 }; // the upper boundary is exclusive
+    const float* histRange = { range };
+    int histSize = 256;
+
+    // calculate the histogram (counts)
+    cv::Mat hist;
+    cv::calcHist( &displayed_image, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false );
+
+    // normalize the histogram (probabilities)
+    cv::Mat normal;
+    cv::normalize( hist, normal, 0, displayed_image.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+
+    for ( int h = 0; h < histSize; h++ ) {
+        float binVal = normal.at<float>(h);
+        std::cout<<" "<<binVal;
+    }
 
     // 'event loop' for keypresses
     while (wait_key());
