@@ -6,8 +6,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <vector>
+#include <bitset>
 #include <iostream>
+#include <vector>
 
 #include "./include/cla_parse.hpp"
 #include "./include/dir_func.hpp"
@@ -20,40 +21,31 @@
 // CLA variable
 std::string input_image;
 
-const uint INTENSITY_VALUES = 256;
-
 img_struct_t* og_image;
 cv::Mat displayed_image;
-cv::Point center;
+
+// holds code and length of code
+struct HuffmanCode {
+    uint length;
+    uint code;
+    uint intensity;
+
+    std::string to_string() {
+        return std::bitset<64>( code ).to_string();
+    }
+};
 
 
-// 'event loop' for keypresses
-int
-wait_key()
+void
+get_histogram(cv::Mat img, cv::Mat* dst)
 {
-    char key_pressed = cv::waitKey(0) & 255;
-    // 's' saves the current image
-    if (cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_VISIBLE) < 1) {
-        // this ends the program if window is closed
-        return 0;
-    }
-    if (key_pressed == 's') {
-        if (!displayed_image.empty()) {
-            write_img_to_file(
-                displayed_image,
-                "./out",
-                "output_" + input_image
-            );
-            cv::destroyAllWindows();
-            return 0;
-        }
-    }
-    // 'q' or  <escape> quits out
-    if (key_pressed == 27 || key_pressed == 'q') {
-        cv::destroyAllWindows();
-        return 0;
-    }
-    return 1;
+    int channels[] = { 0 };
+    float range[] = { 0, 256 }; // the upper boundary is exclusive
+    const float* histRange = { range };
+    int histSize = 256;
+
+    // calculate the histogram (counts)
+    cv::calcHist( &img, 1, 0, cv::Mat(), *dst, 1, &histSize, &histRange, true, false );
 }
 
 
@@ -66,12 +58,12 @@ main(int argc, const char** argv)
         argc, argv,
         &input_image
     );
-    if (parse_result != 1) return parse_result;
+    if ( parse_result != 1 ) return parse_result;
 
     assert(input_image.length() > 0);
 
     // open image, grayscale = true
-    og_image = open_image(input_image.c_str(), true);
+    og_image = open_image( input_image.c_str(), true );
 
     assert(og_image != NULL);
 
@@ -81,26 +73,21 @@ main(int argc, const char** argv)
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
-    int channels[] = { 0 };
-    float range[] = { 0, 256 }; // the upper boundary is exclusive
-    const float* histRange = { range };
     int histSize = 256;
-
-    // calculate the histogram (counts)
-    cv::Mat hist;
-    cv::calcHist( &displayed_image, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false );
-
+    cv::Mat normal, hist;
     // normalize the histogram (probabilities)
-    cv::Mat normal;
-    cv::normalize( hist, normal, 0, displayed_image.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+    get_histogram( displayed_image, &normal );
 
+    cv::Mat sorted = cv::Mat::zeros( normal.size(), normal.type() );
+    cv::sort( normal, sorted, cv::SORT_EVERY_COLUMN );
+
+    std::cout<<"hi";
     for ( int h = 0; h < histSize; h++ ) {
-        float binVal = normal.at<float>(h);
+        float binVal = sorted.at<float>(h);
         std::cout<<" "<<binVal;
     }
+    std::cout<<"bye";
 
-    // 'event loop' for keypresses
-    while (wait_key());
 
     og_image->image.release();
     displayed_image.release();
