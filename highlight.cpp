@@ -173,13 +173,11 @@ mouse_callback(int event, int x, int y, int, void*)
             break;
         case cv::EVENT_MOUSEMOVE:
             // only allow mouse_pos to handle changes inside display
-            if (x > 0 && x < displayed_image.cols)
-                state.mouse_pos.x = x;
-            else if (x < 0) x = 0; else x = displayed_image.cols - 1;
+            if (x < 0) x = 0; else if (x >= displayed_image.cols) x = displayed_image.cols - 1;
+            state.mouse_pos.x = x;
 
-            if (y >= 0 && y < displayed_image.rows)
-                state.mouse_pos.y = y;
-            else if (y < 0) y = 0; else y = displayed_image.rows - 1;
+            if (y < 0) y = 0; else if (y >= displayed_image.rows) y = displayed_image.rows - 1;
+            state.mouse_pos.y = y;
 
             if (state.started) // draw rectangle in real time
                 on_rect_complete();
