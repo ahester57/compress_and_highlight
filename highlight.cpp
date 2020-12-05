@@ -24,7 +24,20 @@ const uint INTENSITY_VALUES = 256;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
-cv::Point center;
+
+// SelectionStage
+struct SelectionState {
+  cv::Point selection_top_left, selection_bottom_right, mouse_pos;
+  bool started = false, done = false;
+
+  cv::Rect to_rect() {
+    return cv::Rect (
+      std::min(this->selection_top_left.x, this->mouse_pos.x),
+      std::min(this->selection_top_left.y, this->mouse_pos.y),
+      std::abs(this->selection_top_left.x-this->mouse_pos.x),
+      std::abs(this->selection_top_left.y-this->mouse_pos.y));
+  }
+} state;
 
 
 // 'event loop' for keypresses
@@ -42,7 +55,9 @@ wait_key()
             write_img_to_file(
                 displayed_image,
                 "./out",
-                "output_" + input_image
+                "output_" + std::to_string(state.selection_top_left.x) +
+                    "_" + std::to_string(state.selection_bottom_right.y) +
+                    input_image
             );
             cv::destroyAllWindows();
             return 0;
@@ -57,13 +72,50 @@ wait_key()
 }
 
 
+// draw_rectangle on image
 void
-do_the_thing()
+draw_rectangle()
 {
-    cv::Rect rect = cv::Rect(200, 200, 200, 200);
-    cv::rectangle(displayed_image, rect, cv::Scalar(5));
+    // deep keep to displayed_image, to only keep one rectangle one screen
+    og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
+
+    // draw the rectangle on screen
+    cv::rectangle(displayed_image, state.to_rect(), cv::Scalar(6));
+
     // display the new image
     cv::imshow(WINDOW_NAME, displayed_image);
+}
+
+
+void
+mouse_callback(int event, int x, int y, int, void* )
+{
+    // https://gist.github.com/guimeira/541e9056364b9491452b7027f12536cc
+    switch(event) {
+        case cv::EVENT_LBUTTONDOWN:
+            state.selection_top_left.x = x;
+            state.selection_top_left.y = y;
+            state.mouse_pos.x = x;
+            state.mouse_pos.y = y;
+            state.started = true;
+            break;
+
+        case cv::EVENT_LBUTTONUP:
+            state.started = false;
+            state.selection_bottom_right.x = x;
+            state.selection_bottom_right.y = y;
+            state.done = true;
+            // draw final rectangle
+            draw_rectangle();
+            break;
+
+        case cv::EVENT_MOUSEMOVE:
+            state.mouse_pos.x = x;
+            state.mouse_pos.y = y;
+            if (state.started) // draw rectangle in real time
+                draw_rectangle();
+            break;
+    }
 }
 
 
@@ -91,10 +143,7 @@ main(int argc, const char** argv)
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
-    cv::waitKey(0);
-
-    // do the thing
-    do_the_thing();
+    cv::setMouseCallback(WINDOW_NAME, mouse_callback);
 
     // 'event loop' for keypresses
     while (wait_key());
