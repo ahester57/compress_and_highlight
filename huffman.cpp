@@ -22,7 +22,7 @@ std::string input_image;
 
 const uint INTENSITY_VALUES = 256;
 
-cv::Mat original_image;
+img_struct_t* og_image;
 cv::Mat displayed_image;
 cv::Point center;
 
@@ -68,27 +68,27 @@ main(int argc, const char** argv)
     );
     if (parse_result != 1) return parse_result;
 
-    // open image
-    img_struct_t* og_image = open_image(input_image.c_str(), false);
+    assert(input_image.length() > 0);
 
-    if (og_image == NULL) {
-        std::cerr << "Could not open image :( " << input_image << std::endl;
-        return -1;
-    }
+    // open image, grayscale = true
+    og_image = open_image(input_image.c_str(), true);
 
-    original_image = og_image->image;
-    original_image.copyTo(displayed_image);
+    assert(og_image != NULL);
+
+    // deep keep to displayed_image
+    og_image->image.copyTo(displayed_image);
+
+    // define center
+    center = cv::Point(displayed_image.cols / 2, displayed_image.rows / 2);
 
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
-    // define center
-    center = cv::Point(original_image.cols / 2, original_image.rows / 2);
 
     // 'event loop' for keypresses
     while (wait_key());
 
-    original_image.release();
+    og_image->image.release();
     displayed_image.release();
 
     return 0;
