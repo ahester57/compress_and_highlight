@@ -26,16 +26,21 @@ cv::Mat displayed_image;
 
 // SelectionStage
 struct SelectionState {
-  cv::Point selection_top_left, selection_bottom_right, mouse_pos;
-  bool started = false, done = false;
+    cv::Point selection_top_left, selection_bottom_right, mouse_pos;
+    bool started = false, done = false;
 
-  cv::Rect to_rect() {
-    return cv::Rect (
-      std::min(this->selection_top_left.x, this->mouse_pos.x),
-      std::min(this->selection_top_left.y, this->mouse_pos.y),
-      std::abs(this->selection_top_left.x-this->mouse_pos.x),
-      std::abs(this->selection_top_left.y-this->mouse_pos.y));
-  }
+    cv::Rect to_rect() {
+        return cv::Rect (
+            std::min(this->selection_top_left.x, this->mouse_pos.x),
+            std::min(this->selection_top_left.y, this->mouse_pos.y),
+            // std::min(
+                std::abs(this->selection_top_left.x - this->mouse_pos.x),
+                // std::abs(displayed_image.cols - std::min(this->selection_top_left.x, this->mouse_pos.x))),
+            // std::min(
+                std::abs(this->selection_top_left.y - this->mouse_pos.y)
+                // std::abs(displayed_image.rows - std::min(this->selection_top_left.y, this->mouse_pos.y)))
+        );
+    }
 } state;
 
 
@@ -106,8 +111,8 @@ dim_image(cv::Mat img)
     cv::Mat dst;
     img.convertTo(dst, CV_32F, 1/255.0);
 
-    for (int r = 0; r < dst.cols; r++) {
-        for (int c = 0; c < dst.rows; c++) {
+    for (int r = 0; r < dst.rows; r++) {
+        for (int c = 0; c < dst.cols; c++) {
             dst.at<float>(r, c) = dst.at<float>(r, c) * 0.75;
         }
     }
@@ -125,11 +130,12 @@ void
 on_rect_complete()
 {
     try {
-        // draw final rectangle
+        // draw rectangle
         draw_rectangle(state.to_rect());
         // if done, save the ROI
         cv::Mat roi = extract_roi(state.to_rect());
         // dim the image
+        // in (real_time)
         dim_image(displayed_image);
         // equalize region of interest
         cv::Mat equalized_roi;
@@ -138,11 +144,8 @@ on_rect_complete()
         equalized_roi.copyTo(displayed_image(state.to_rect()));
         // show the final product
         cv::imshow(WINDOW_NAME, displayed_image);
-        state.done = true;
-        state.started = false;
+
     } catch (...) {
-        state.done = true;
-        state.started = false;
         assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
     }
 }
@@ -164,13 +167,22 @@ mouse_callback(int event, int x, int y, int, void*)
         case cv::EVENT_LBUTTONUP:
             state.selection_bottom_right.x = x;
             state.selection_bottom_right.y = y;
+            state.started = false;
             on_rect_complete();
+            state.done = true;
             break;
         case cv::EVENT_MOUSEMOVE:
-            state.mouse_pos.x = x;
-            state.mouse_pos.y = y;
+            // only allow mouse_pos to handle changes inside display
+            if (x > 0 && x < displayed_image.cols)
+                state.mouse_pos.x = x;
+            else if (x < 0) x = 0; else x = displayed_image.cols - 1;
+
+            if (y >= 0 && y < displayed_image.rows)
+                state.mouse_pos.y = y;
+            else if (y < 0) y = 0; else y = displayed_image.rows - 1;
+
             if (state.started) // draw rectangle in real time
-                draw_rectangle(state.to_rect());
+                on_rect_complete();
             break;
     }
 }
