@@ -78,7 +78,6 @@ wait_key()
     return 1;
 }
 
-
 // draw_rectangle on image
 void
 draw_rectangle(cv::Rect rect)
@@ -95,9 +94,9 @@ draw_rectangle(cv::Rect rect)
 
 // save the ROI to a cv::Mat
 void
-extract_roi(cv::Mat img, cv::Rect rect)
+extract_roi(cv::Rect rect)
 {
-    img(rect).copyTo(roi);
+    displayed_image(rect).copyTo(roi);
 }
 
 // dim the original image
@@ -121,6 +120,13 @@ dim_image(cv::Mat img)
     cv::imshow(WINDOW_NAME, displayed_image);
 }
 
+// insert ROI into displayed image
+void
+insert_roi(cv::Mat roi_to_insert)
+{
+    roi_to_insert.copyTo(displayed_image(state.to_rect()));
+}
+
 // post complete rectangle
 void
 on_rect_complete()
@@ -129,12 +135,15 @@ on_rect_complete()
         // draw final rectangle
         draw_rectangle(state.to_rect());
         // if done, save the ROI
-        extract_roi(displayed_image, state.to_rect());
+        extract_roi(state.to_rect());
         // dim the image
         dim_image(displayed_image);
-        //
-        cv::Mat poop = run_equalization(roi);
-        cv::imshow("_cropped", poop);
+        // equalize region of interest
+        cv::Mat equalized_roi = run_equalization(roi);
+        // insert ROI into displayed image
+        insert_roi(equalized_roi);
+        cv::imshow(WINDOW_NAME, displayed_image);
+
     } catch (...) {
         assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
     }
