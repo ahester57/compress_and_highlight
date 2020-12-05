@@ -28,11 +28,15 @@ cv::Mat displayed_image;
 struct HuffmanCode {
     uint length;
     uint code;
-    uint intensity;
 
     std::string to_string() {
         return std::bitset<64>( code ).to_string();
     }
+};
+
+struct PixelProb {
+    uint symbol;
+    float probability;
 };
 
 
@@ -74,20 +78,26 @@ main(int argc, const char** argv)
     cv::imshow(WINDOW_NAME, displayed_image);
 
     int histSize = 256;
-    cv::Mat normal, hist;
+    cv::Mat histo;
     // normalize the histogram (probabilities)
-    get_histogram( displayed_image, &normal );
+    get_histogram( displayed_image, &histo );
 
-    cv::Mat sorted = cv::Mat::zeros( normal.size(), normal.type() );
-    cv::sort( normal, sorted, cv::SORT_EVERY_COLUMN );
+    //
+    uint num_pixels = displayed_image.rows * displayed_image.cols;
 
-    std::cout<<"hi";
-    for ( int h = 0; h < histSize; h++ ) {
-        float binVal = sorted.at<float>(h);
-        std::cout<<" "<<binVal;
+    PixelProb probabilities[histSize];
+    for ( uint h = 0; h < histSize; h++ ) {
+        float binVal = histo.at<float>(h);
+        probabilities[h] = { h, binVal / num_pixels };
     }
-    std::cout<<"bye";
 
+    for ( uint h = 0; h < histSize; h++ ) {
+        float binVal = histo.at<float>(h);
+        std::cout<<probabilities[h].symbol<<": "<<probabilities[h].probability<<std::endl;
+    }
+
+    // cv::Mat sorted = cv::Mat::zeros( normal.size(), normal.type() );
+    // cv::sort( normal, sorted, cv::SORT_EVERY_COLUMN );
 
     og_image->image.release();
     displayed_image.release();
