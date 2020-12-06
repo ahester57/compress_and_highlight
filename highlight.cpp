@@ -18,8 +18,9 @@
 
 const std::string WINDOW_NAME = "Highlight";
 
-// CLA variable
+// CLA variables
 std::string input_image;
+bool grayscale;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
@@ -61,9 +62,10 @@ wait_key()
             write_img_to_file(
                 displayed_image,
                 "./out",
-                "output_" + std::to_string(state.selection_top_left.x) +
-                    "_" + std::to_string(state.selection_bottom_right.y) +
-                    "/" + input_image
+                "output_" + std::string(grayscale ? "grayscale_" : "color_") +
+                            std::to_string(state.selection_top_left.x) + "_" +
+                            std::to_string(state.selection_bottom_right.y) +
+                            "/" + input_image
             );
             cv::destroyAllWindows();
             return 0;
@@ -112,7 +114,12 @@ on_rect_complete()
         cv::Mat roi = extract_roi(state.to_rect());
 
         // dim the image (in real_time)
-        dim_grayscale_image(displayed_image, 0.75);
+        if (grayscale) {
+            dim_grayscale_image(displayed_image, 0.75);
+        } else {
+            // dim_hsv_image(displayed_image, 0.75);
+        }
+
         cv::imshow(WINDOW_NAME, displayed_image);
 
         // equalize region of interest
@@ -171,7 +178,6 @@ mouse_callback(int event, int x, int y, int, void*)
 int
 main(int argc, const char** argv)
 {
-    bool grayscale;
     // parse and save command line args
     int parse_result = parse_arguments(
         argc, argv,
