@@ -14,6 +14,7 @@ void
 bgr_to_hsv(cv::Mat bgr, cv::Mat hsv)
 {
     assert(bgr.channels() == 3);
+    cv::cvtColor(bgr, hsv, cv::COLOR_BGR2HSV);
 }
 
 // convert an HSV image to BGR
@@ -21,4 +22,5 @@ void
 hsv_to_bgr(cv::Mat hsv, cv::Mat bgr)
 {
     assert(hsv.channels() == 3);
+    cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
 }
