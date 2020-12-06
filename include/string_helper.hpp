@@ -2,8 +2,8 @@
 // Austin Hester CS542o oct 2020
 // g++.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
 
-#ifndef _H_STRING_HELPER
-#define _H_STRING_HELPER
+#ifndef STRING_HELPER_H
+#define STRING_HELPER_H
 
 #include <vector>
 #include <iostream>
