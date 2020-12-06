@@ -31,7 +31,8 @@ struct SelectionState {
     cv::Point selection_top_left, selection_bottom_right, mouse_pos;
     bool started = false, done = false;
 
-    cv::Rect to_rect() {
+    cv::Rect
+    to_rect() {
         return cv::Rect (
             std::min(this->selection_top_left.x, this->mouse_pos.x),
             std::min(this->selection_top_left.y, this->mouse_pos.y),
@@ -39,6 +40,16 @@ struct SelectionState {
             std::abs(this->selection_top_left.y - this->mouse_pos.y)
         );
     }
+
+    void
+    reset() {
+        this->selection_top_left = cv::Point(0, 0);
+        this->selection_bottom_right = cv::Point(0, 0);
+        this->mouse_pos = cv::Point(0, 0);
+        this->started = false;
+        this->done = false;
+    }
+
 } state;
 
 
@@ -54,6 +65,7 @@ wait_key()
     // 'o' displays the original image
     if (key_pressed == 'o') {
         og_image->image.copyTo(displayed_image);
+        state.reset();
         cv::imshow(WINDOW_NAME, displayed_image);
     }
     // 's' saves the current image
