@@ -63,7 +63,7 @@ wait_key()
                 "./out",
                 "output_" + std::to_string(state.selection_top_left.x) +
                     "_" + std::to_string(state.selection_bottom_right.y) +
-                    input_image
+                    "/" + input_image
             );
             cv::destroyAllWindows();
             return 0;
