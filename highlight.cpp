@@ -34,12 +34,8 @@ struct SelectionState {
         return cv::Rect (
             std::min(this->selection_top_left.x, this->mouse_pos.x),
             std::min(this->selection_top_left.y, this->mouse_pos.y),
-            // std::min(
-                std::abs(this->selection_top_left.x - this->mouse_pos.x),
-                // std::abs(displayed_image.cols - std::min(this->selection_top_left.x, this->mouse_pos.x))),
-            // std::min(
-                std::abs(this->selection_top_left.y - this->mouse_pos.y)
-                // std::abs(displayed_image.rows - std::min(this->selection_top_left.y, this->mouse_pos.y)))
+            std::abs(this->selection_top_left.x - this->mouse_pos.x),
+            std::abs(this->selection_top_left.y - this->mouse_pos.y)
         );
     }
 } state;
@@ -88,13 +84,12 @@ draw_rectangle(cv::Rect rect)
 {
     // deep keep to displayed_image, to only keep one rectangle one screen
     og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
-
     // draw the rectangle on screen
     cv::rectangle(displayed_image, rect, cv::Scalar(6));
-
     // display the new image
     cv::imshow(WINDOW_NAME, displayed_image);
 }
+
 
 // save the ROI to a cv::Mat
 cv::Mat
@@ -113,7 +108,7 @@ on_rect_complete()
     try {
         // draw rectangle
         draw_rectangle(state.to_rect());
-        // if done, save the ROI
+        // save the ROI
         cv::Mat roi = extract_roi(state.to_rect());
 
         // dim the image (in real_time)
@@ -123,6 +118,7 @@ on_rect_complete()
         // equalize region of interest
         cv::Mat equalized_roi;
         cv::equalizeHist(roi, equalized_roi);
+
         // insert ROI into displayed image
         equalized_roi.copyTo(displayed_image(state.to_rect()));
         // show the final product
@@ -155,6 +151,9 @@ mouse_callback(int event, int x, int y, int, void*)
             state.done = true;
             break;
         case cv::EVENT_MOUSEMOVE:
+            // don't listen for anything if not started
+            if (!state.started) break;
+
             // only allow mouse_pos to handle changes inside display
             if (x < 0) x = 0; else if (x >= displayed_image.cols) x = displayed_image.cols - 1;
             state.mouse_pos.x = x;
@@ -162,8 +161,8 @@ mouse_callback(int event, int x, int y, int, void*)
             if (y < 0) y = 0; else if (y >= displayed_image.rows) y = displayed_image.rows - 1;
             state.mouse_pos.y = y;
 
-            if (state.started) // draw rectangle in real time
-                on_rect_complete();
+             // draw rectangle in real time
+            on_rect_complete();
             break;
     }
 }
