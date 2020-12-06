@@ -114,51 +114,52 @@ extract_roi(cv::Mat src, cv::Rect rect)
 void
 on_rect_complete()
 {
-    try {
-        // deep keep to displayed_image, to only keep one rectangle one screen
-        og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
+    if (state.to_rect().area() == 0) return;
 
-        // draw rectangle
-        draw_rectangle(displayed_image, state.to_rect());
+    // deep keep to displayed_image, to only keep one rectangle one screen
+    og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
 
-        // save the ROI
-        cv::Mat roi = extract_roi(displayed_image, state.to_rect());
+    // draw rectangle
+    draw_rectangle(displayed_image, state.to_rect());
 
-        // dim the image (in real_time)
-        cv::Mat equalized_roi;
-        if (grayscale) {
+    // save the ROI
+    cv::Mat roi = extract_roi(displayed_image, state.to_rect());
 
-            // grayscale processing
-            dim_grayscale_image(displayed_image, 0.75);
+    // dim the image (in real_time)
+    cv::Mat equalized_roi;
+    if (grayscale) {
 
-            // equalize region of interest
-            cv::equalizeHist(roi, equalized_roi);
+        // grayscale processing
+        dim_grayscale_image(displayed_image, 0.75);
 
-        } else {
+        // equalize region of interest
+        cv::equalizeHist(roi, equalized_roi);
 
-            // color processing
-            cv::Mat hsv_image = cv::Mat::zeros(displayed_image.size(), displayed_image.type());
-            bgr_to_hsv(displayed_image, hsv_image);
+    } else {
 
-            // HSV dimming placeholder
-            // dim_hsv_image(displayed_image, 0.75);
+        // color processing (BGR -> HSV)
+        cv::Mat hsv_image = cv::Mat::zeros(displayed_image.size(), displayed_image.type());
+        bgr_to_hsv(displayed_image, hsv_image);
 
-            // HSV equalize placeholder
-            equalized_roi = cv::Mat::zeros(roi.size(), roi.type());
+        // HSV dimming placeholder
+        // dim_hsv_image(displayed_image, 0.75);
 
-            hsv_to_bgr(hsv_image, displayed_image);
-            cv::imshow("hsv space", hsv_image);
-        }
+        // HSV equalize placeholder
+        equalized_roi = cv::Mat::zeros(roi.size(), roi.type());
 
-        // insert ROI into displayed image
-        equalized_roi.copyTo(displayed_image(state.to_rect()));
+        bgr_to_hsv(roi, equalized_roi);
+        // roi.copyTo(equalized_roi);
 
-        // show the final product
-        cv::imshow(WINDOW_NAME, displayed_image);
-
-    } catch (...) {
-        assert(true && "- Don't just click.\n- Don't draw outside the lines.\n\n");
+        // displayed image back to BGR
+        hsv_to_bgr(hsv_image, displayed_image);
     }
+
+    // insert ROI into displayed image
+    equalized_roi.copyTo(displayed_image(state.to_rect()));
+
+    // show the final product
+    cv::imshow(WINDOW_NAME, displayed_image);
+
 }
 
 
