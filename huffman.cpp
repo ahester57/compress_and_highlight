@@ -16,13 +16,14 @@
 #include "./include/string_helper.hpp"
 
 
-#define WINDOW_NAME "Huffman"
+const std::string WINDOW_NAME = "Huffman";
 
 // CLA variable
 std::string input_image;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
+
 
 // holds code and length of code
 struct HuffmanCode {
@@ -40,16 +41,18 @@ struct PixelProb {
 };
 
 
-void
-get_histogram(cv::Mat img, cv::Mat* dst)
+// compute histogram
+cv::Mat
+get_histogram(cv::Mat* img, int histSize)
 {
     int channels[] = { 0 };
-    float range[] = { 0, 256 }; // the upper boundary is exclusive
+    float range[] = { 0, (float) histSize }; // the upper boundary is exclusive
     const float* histRange = { range };
-    int histSize = 256;
 
     // calculate the histogram (counts)
-    cv::calcHist( &img, 1, 0, cv::Mat(), *dst, 1, &histSize, &histRange, true, false );
+    cv::Mat hist;
+    cv::calcHist( img, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false );
+    return hist;
 }
 
 
@@ -79,13 +82,11 @@ main(int argc, const char** argv)
     cv::imshow(WINDOW_NAME, displayed_image);
 
     int histSize = 256;
-    cv::Mat histo;
-    // normalize the histogram (probabilities)
-    get_histogram( displayed_image, &histo );
+    cv::Mat histo = get_histogram( &displayed_image, histSize );
 
-    //
+    // get total pixels
     uint num_pixels = displayed_image.rows * displayed_image.cols;
-
+    // get probabilities
     PixelProb probabilities[histSize];
     for ( uint h = 0; h < histSize; h++ ) {
         float binVal = histo.at<float>(h);
