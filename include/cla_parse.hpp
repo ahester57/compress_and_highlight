@@ -11,7 +11,8 @@
 int parse_arguments(
     int argc,
     const char** argv,
-    std::string* input_image
+    std::string* input_image,
+    bool* grayscale
 );
 
 #endif

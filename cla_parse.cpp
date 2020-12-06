@@ -11,11 +11,14 @@ int
 parse_arguments(
     int argc,
     const char** argv,
-    std::string* input_image
+    std::string* input_image,
+    bool* grayscale
 ) {
     cv::String keys =
         "{@filename   |<none>| input image}"             // input image is the first argument (positional)
         "{help h      |      | show help message}";
+    if (grayscale != NULL)
+        keys += "{grayscale g  |      | read grayscale}";
 
     cv::CommandLineParser parser(argc, argv, keys);
 
@@ -39,6 +42,15 @@ parse_arguments(
     } catch (...) {
         std::cerr << "Failed to parse input image argument!:" << std::endl;
         return -1;
+    }
+
+    if (grayscale != NULL) {
+        try {
+            *grayscale = (bool) parser.has("g") ? true : false;
+        } catch (...) {
+            std::cerr << "Failed to parse grayscale argument." << std::endl;
+            return -1;
+        }
     }
 
     return 1;

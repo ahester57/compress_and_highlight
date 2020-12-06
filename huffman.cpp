@@ -60,7 +60,8 @@ main(int argc, const char** argv)
     // parse and save command line args
     int parse_result = parse_arguments(
         argc, argv,
-        &input_image
+        &input_image,
+        NULL
     );
     if ( parse_result != 1 ) return parse_result;
 

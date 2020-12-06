@@ -11,9 +11,8 @@
 
 #include "./include/cla_parse.hpp"
 #include "./include/dir_func.hpp"
-// #include "./include/histo_func.hpp"
+#include "./include/hsv_convert.hpp"
 #include "./include/img_struct.hpp"
-// #include "./include/string_helper.hpp"
 
 
 #define WINDOW_NAME "Highlight"
@@ -134,8 +133,8 @@ on_rect_complete()
         draw_rectangle(state.to_rect());
         // if done, save the ROI
         cv::Mat roi = extract_roi(state.to_rect());
-        // dim the image
-        // in (real_time)
+
+        // dim the image (in real_time)
         dim_image(displayed_image);
         // equalize region of interest
         cv::Mat equalized_roi;
@@ -189,18 +188,19 @@ mouse_callback(int event, int x, int y, int, void*)
 int
 main(int argc, const char** argv)
 {
-
+    bool grayscale;
     // parse and save command line args
     int parse_result = parse_arguments(
         argc, argv,
-        &input_image
+        &input_image,
+        &grayscale
     );
     if (parse_result != 1) return parse_result;
 
     assert(input_image.length() > 0);
 
     // open image, grayscale = true
-    og_image = open_image(input_image.c_str(), true);
+    og_image = open_image(input_image.c_str(), grayscale);
 
     assert(og_image != NULL);
 
