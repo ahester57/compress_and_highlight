@@ -10,18 +10,20 @@
 #include <iostream>
 
 #include "./include/cla_parse.hpp"
+#include "./include/dim_image.hpp"
 #include "./include/dir_func.hpp"
 #include "./include/hsv_convert.hpp"
 #include "./include/img_struct.hpp"
 
 
-#define WINDOW_NAME "Highlight"
+const std::string WINDOW_NAME = "Highlight";
 
 // CLA variable
 std::string input_image;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
+
 
 // SelectionStage
 struct SelectionState {
@@ -79,6 +81,7 @@ wait_key()
     return 1;
 }
 
+
 // draw_rectangle on image
 void
 draw_rectangle(cv::Rect rect)
@@ -102,27 +105,6 @@ extract_roi(cv::Rect rect)
     return dst;
 }
 
-// dim the original image
-void
-dim_image(cv::Mat img)
-{
-    // convert image to float
-    cv::Mat dst;
-    img.convertTo(dst, CV_32F, 1/255.0);
-
-    for (int r = 0; r < dst.rows; r++) {
-        for (int c = 0; c < dst.cols; c++) {
-            dst.at<float>(r, c) = dst.at<float>(r, c) * 0.75;
-        }
-    }
-
-    // convert back to CV_8UC3 and display
-    dst.convertTo(displayed_image, CV_8U, 255.0);
-
-    // display the new image
-    cv::imshow(WINDOW_NAME, displayed_image);
-}
-
 
 // post complete rectangle
 void
@@ -135,7 +117,9 @@ on_rect_complete()
         cv::Mat roi = extract_roi(state.to_rect());
 
         // dim the image (in real_time)
-        dim_image(displayed_image);
+        dim_grayscale_image(displayed_image, 0.75);
+        cv::imshow(WINDOW_NAME, displayed_image);
+
         // equalize region of interest
         cv::Mat equalized_roi;
         cv::equalizeHist(roi, equalized_roi);
