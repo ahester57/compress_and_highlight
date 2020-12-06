@@ -38,7 +38,9 @@ equalization on the ROI and insert the equalized image back into its position. D
 ```
 Usage: highlight.exe [params] filename
 
-        -h, --help (value:true)
+        -g, --grayscale
+                read grayscale
+        -h, --help
                 show help message
 
         filename (value:<none>)
