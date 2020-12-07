@@ -61,6 +61,8 @@ struct SelectionState {
 } state;
 
 
+void on_rect_complete();
+
 // 'event loop' for keypresses
 int
 wait_key()
@@ -70,26 +72,30 @@ wait_key()
         // this ends the program if window is closed
         return 0;
     }
-    // 'o' displays the original image
-    if (key_pressed == 'o') {
-        og_image->image.copyTo(displayed_image);
+    // 'o' or 'c' displays the original image
+    if (key_pressed == 'o' || key_pressed == 'c') {
         // reset selection state
         state.reset();
+        on_rect_complete();
         cv::imshow(WINDOW_NAME, displayed_image);
     }
     // 's' saves the current image
     if (key_pressed == 's') {
         if (!displayed_image.empty()) {
+            // if there's an image, save it
+            std::string out_filename =
+                        "output_" + std::string(grayscale ? "grayscale_" : "color_") +
+                            std::to_string(state.selection_top_left.x) + "_" +
+                            std::to_string(state.selection_bottom_right.y) +
+                            "/" + input_image;
+
             write_img_to_file(
                 displayed_image,
                 "./out",
-                "output_" + std::string(grayscale ? "grayscale_" : "color_") +
-                            std::to_string(state.selection_top_left.x) + "_" +
-                            std::to_string(state.selection_bottom_right.y) +
-                            "/" + input_image
+                out_filename
             );
-            cv::destroyAllWindows();
-            return 0;
+            std::cout << "Image saved to ./out/" << out_filename << std::endl;
+            return 1;
         }
     }
     // 'q' or  <escape> quits out
@@ -177,7 +183,19 @@ process_color()
 void
 on_rect_complete()
 {
-    if (state.to_rect().area() == 0) return;
+    if (state.to_rect().area() == 0) {
+        if (grayscale) {
+            // deep copy original to displayed_image
+            og_image->image.copyTo(displayed_image);
+            dim_grayscale_image(displayed_image, dim_factor);
+        } else {
+            // deep copy original HSV to displayed_image
+            hsv_image.copyTo(displayed_image);
+            dim_hsv_image(displayed_image, dim_factor);
+        }
+        cv::imshow(WINDOW_NAME, displayed_image);
+        return;
+    }
 
     // dim the image (in real_time)
     cv::Mat equalized_roi;
