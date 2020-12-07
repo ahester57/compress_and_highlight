@@ -93,14 +93,6 @@ wait_key()
 }
 
 
-// draw_rectangle on image
-void
-draw_rectangle(cv::Mat img, cv::Rect rect)
-{
-    cv::rectangle(img, rect, cv::Scalar(6));
-}
-
-
 // save the ROI to a cv::Mat
 cv::Mat
 extract_roi(cv::Mat src, cv::Rect rect)
@@ -117,19 +109,17 @@ on_rect_complete()
 {
     if (state.to_rect().area() == 0) return;
 
-    // deep keep to displayed_image, to only keep one rectangle one screen
-    og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
-
-    // draw rectangle
-    draw_rectangle(displayed_image, state.to_rect());
-
-    // save the ROI
-    cv::Mat roi = extract_roi(displayed_image, state.to_rect());
-
     // dim the image (in real_time)
-    cv::Mat equalized_roi;
+    cv::Mat roi, equalized_roi;
     if (grayscale) {
         // grayscale processing
+
+        // deep copy original to displayed_image
+        og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
+
+        // save the region of interest
+        roi = extract_roi(displayed_image, state.to_rect());
+
         dim_grayscale_image(displayed_image, 0.75);
 
         // equalize region of interest
@@ -137,13 +127,17 @@ on_rect_complete()
 
     } else {
         // color processing (BGR -> HSV)
+
+        // deep copy original HSV to displayed_image
         hsv_image.copyTo(displayed_image);
+
+        // save the region of interest in HSV
+        roi = extract_roi(displayed_image, state.to_rect());
 
         // HSV dimming placeholder
         dim_hsv_image(displayed_image, 0.75);
 
         // HSV equalize placeholder
-        // bgr_to_hsv(roi, &equalized_roi);
         roi.copyTo(equalized_roi);
 
         // displayed image back to BGR
