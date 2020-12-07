@@ -24,6 +24,7 @@ bool grayscale;
 
 img_struct_t* og_image;
 cv::Mat displayed_image;
+cv::Mat hsv_image;
 
 
 // SelectionStage
@@ -128,7 +129,6 @@ on_rect_complete()
     // dim the image (in real_time)
     cv::Mat equalized_roi;
     if (grayscale) {
-
         // grayscale processing
         dim_grayscale_image(displayed_image, 0.75);
 
@@ -136,22 +136,18 @@ on_rect_complete()
         cv::equalizeHist(roi, equalized_roi);
 
     } else {
-
         // color processing (BGR -> HSV)
-        cv::Mat hsv_image = cv::Mat::zeros(displayed_image.size(), displayed_image.type());
-        bgr_to_hsv(displayed_image, hsv_image);
+        hsv_image.copyTo(displayed_image);
 
         // HSV dimming placeholder
-        // dim_hsv_image(displayed_image, 0.75);
+        dim_hsv_image(displayed_image, 0.75);
 
         // HSV equalize placeholder
-        equalized_roi = cv::Mat::zeros(roi.size(), roi.type());
-
-        bgr_to_hsv(roi, equalized_roi);
-        // roi.copyTo(equalized_roi);
+        // bgr_to_hsv(roi, &equalized_roi);
+        roi.copyTo(equalized_roi);
 
         // displayed image back to BGR
-        hsv_to_bgr(hsv_image, displayed_image);
+        hsv_to_bgr(displayed_image, &displayed_image);
     }
 
     // insert ROI into displayed image
@@ -221,6 +217,11 @@ main(int argc, const char** argv)
 
     // deep keep to displayed_image
     og_image->image.copyTo(displayed_image);
+
+    // initialize HSV image if using color
+    if (!grayscale) {
+        bgr_to_hsv(displayed_image, &hsv_image);
+    }
 
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);

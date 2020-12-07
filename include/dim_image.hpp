@@ -8,5 +8,6 @@
 #include <opencv2/core/core.hpp>
 
 void dim_grayscale_image(cv::Mat img, float factor);
+void dim_hsv_image(cv::Mat img, float factor);
 
 #endif

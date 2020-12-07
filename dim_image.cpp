@@ -13,16 +13,20 @@
 void
 dim_grayscale_image(cv::Mat img, float factor)
 {
-    // convert image to float
-    cv::Mat tmp;
-    img.convertTo(tmp, CV_32F, 1/255.0);
-
-    for (int r = 0; r < tmp.rows; r++) {
-        for (int c = 0; c < tmp.cols; c++) {
-            tmp.at<float>(r, c) = tmp.at<float>(r, c) * factor;
+    for (int r = 0; r < img.rows; r++) {
+        for (int c = 0; c < img.cols; c++) {
+            img.at<uchar>(r, c) *= factor;
         }
     }
+}
 
-    // convert back to CV_8UC3
-    tmp.convertTo(img, CV_8U, 255.0);
+// dim an HSV image
+void
+dim_hsv_image(cv::Mat img, float factor)
+{
+    for (int r = 0; r < img.rows; r++) {
+        for (int c = 0; c < img.cols; c++) {
+            img.at<cv::Vec3b>(r, c)[2] *= factor;
+        }
+    }
 }

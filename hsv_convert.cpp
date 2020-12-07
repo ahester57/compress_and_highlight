@@ -11,16 +11,20 @@
 
 // convert a BGR image to HSV
 void
-bgr_to_hsv(cv::Mat bgr, cv::Mat hsv)
+bgr_to_hsv(cv::Mat bgr, cv::Mat* hsv)
 {
     assert(bgr.channels() == 3);
-    cv::cvtColor(bgr, hsv, cv::COLOR_BGR2HSV);
+    cv::Mat tmp = cv::Mat::zeros(bgr.size(), bgr.type());
+    cv::cvtColor(bgr, tmp, cv::COLOR_BGR2HSV);
+    tmp.copyTo(*hsv);
 }
 
 // convert an HSV image to BGR
 void
-hsv_to_bgr(cv::Mat hsv, cv::Mat bgr)
+hsv_to_bgr(cv::Mat hsv, cv::Mat* bgr)
 {
     assert(hsv.channels() == 3);
-    cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
+    cv::Mat tmp = cv::Mat::zeros(hsv.size(), hsv.type());
+    cv::cvtColor(hsv, tmp, cv::COLOR_HSV2BGR);
+    tmp.copyTo(*bgr);
 }
