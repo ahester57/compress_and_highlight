@@ -22,7 +22,7 @@ const std::string WINDOW_NAME = "Highlight";
 std::string input_image;
 bool grayscale;
 
-const float dim_array[] = { 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, -111.11, -22.22, -11.11, 11.11, 22.22, 111.11, 0 };
+const float dim_array[] = { 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, -111.11, -22.22, -11.11, 111.11, 22.22, 11.11, 0 };
 float dim_factor = 1;
 int slider_dim_value = 0;
 
@@ -72,6 +72,7 @@ wait_key()
     // 'o' displays the original image
     if (key_pressed == 'o') {
         og_image->image.copyTo(displayed_image);
+        // reset selection state
         state.reset();
         cv::imshow(WINDOW_NAME, displayed_image);
     }
@@ -133,7 +134,7 @@ process_grayscale()
 cv::Mat
 process_color()
 {
-// deep copy original HSV to displayed_image
+    // deep copy original HSV to displayed_image
     hsv_image.copyTo(displayed_image);
 
     // save the region of interest in HSV
@@ -147,16 +148,20 @@ process_color()
 
     // HSV equalizer
     cv::Mat equalized_roi;
+
     // 1. split the original image into 3 hsv channels
     cv::Mat hsv_values[3];
     cv::split(roi, hsv_values);
     std::vector<cv::Mat> channels = { hsv_values[0], hsv_values[1], hsv_values[2] };
+
     // 2. equalize the image
     cv::Mat hue_equalized;
     cv::equalizeHist(channels[2], hue_equalized);
     channels[2] = hue_equalized;
+
     // 3. merge channels back together
     cv:merge(channels, equalized_roi);
+
     // 4. convert equalized ROI to BGR
     hsv_to_bgr(equalized_roi, &equalized_roi);
 
@@ -204,9 +209,11 @@ on_trackbar_dim_level(int, void*)
 void
 mouse_callback(int event, int x, int y, int, void*)
 {
-    // https://gist.github.com/guimeira/541e9056364b9491452b7027f12536cc
+    // https://gist.github.com/guimeira/541e9056364b9491452b7027f12536cc (modified move)
     switch (event) {
         case cv::EVENT_LBUTTONDOWN:
+            // reset selection state
+            state.reset();
             state.selection_top_left.x = x;
             state.selection_top_left.y = y;
             state.mouse_pos.x = x;
