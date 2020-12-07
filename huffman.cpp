@@ -17,6 +17,7 @@
 
 
 const std::string WINDOW_NAME = "Huffman";
+const int HIST_SIZE = 256;
 
 // CLA variable
 std::string input_image;
@@ -35,23 +36,47 @@ struct HuffmanCode {
     }
 };
 
+// holds symbol and its probability
 struct PixelProb {
     uint symbol;
     float probability;
 };
 
+// comparison function for struct PixelProb
+bool
+pixel_sorter(const PixelProb& a, const PixelProb& b)
+{
+    return a.probability < b.probability;
+}
+
+
+// compute probabilities
+PixelProb*
+compute_probabilities(cv::Mat histo)
+{
+    // get total pixels
+    uint num_pixels = displayed_image.rows * displayed_image.cols;
+    // get probabilities
+    PixelProb* probabilities = (PixelProb*) malloc(sizeof(PixelProb) * HIST_SIZE);
+    for ( uint h = 0; h < HIST_SIZE; h++ ) {
+        float binVal = histo.at<float>(h);
+        probabilities[h] = { h, binVal / num_pixels };
+    }
+    return probabilities;
+}
+
 
 // compute histogram
 cv::Mat
-get_histogram(cv::Mat* img, int histSize)
+compute_histogram(cv::Mat* img)
 {
     int channels[] = { 0 };
-    float range[] = { 0, (float) histSize }; // the upper boundary is exclusive
+    float range[] = { 0, (float) HIST_SIZE }; // the upper boundary is exclusive
     const float* histRange = { range };
 
     // calculate the histogram (counts)
     cv::Mat hist;
-    cv::calcHist( img, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false );
+    cv::calcHist( img, 1, 0, cv::Mat(), hist, 1, &HIST_SIZE, &histRange, true, false );
     return hist;
 }
 
@@ -81,28 +106,28 @@ main(int argc, const char** argv)
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
-    int histSize = 256;
-    cv::Mat histo = get_histogram( &displayed_image, histSize );
 
-    // get total pixels
-    uint num_pixels = displayed_image.rows * displayed_image.cols;
+    // compute histogram
+    cv::Mat histo = compute_histogram( &displayed_image );
+
     // get probabilities
-    PixelProb probabilities[histSize];
-    for ( uint h = 0; h < histSize; h++ ) {
-        float binVal = histo.at<float>(h);
-        probabilities[h] = { h, binVal / num_pixels };
-    }
+    PixelProb* probabilities = compute_probabilities( histo );
 
-    for ( uint h = 0; h < histSize; h++ ) {
+    // sort by probability
+    std::sort(probabilities, probabilities + HIST_SIZE, &pixel_sorter);
+
+    // display probs
+    for ( uint h = 0; h < HIST_SIZE; h++ ) {
         float binVal = histo.at<float>(h);
         std::cout<<probabilities[h].symbol<<": "<<probabilities[h].probability<<std::endl;
     }
 
-    // cv::Mat sorted = cv::Mat::zeros( normal.size(), normal.type() );
-    // cv::sort( normal, sorted, cv::SORT_EVERY_COLUMN );
+    cv::waitKey(500); // splash screen
 
-    og_image->image.release();
+    histo.release();
     displayed_image.release();
+    og_image->image.release();
 
+    delete probabilities;
     return 0;
 }
