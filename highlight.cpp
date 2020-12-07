@@ -129,6 +129,7 @@ on_rect_complete()
         // equalize region of interest
         cv::equalizeHist(roi, equalized_roi);
         roi.release();
+
     } else {
         // color processing (BGR -> HSV)
 
@@ -144,8 +145,21 @@ on_rect_complete()
         // displayed image back to BGR
         hsv_to_bgr(displayed_image, &displayed_image);
 
-        // HSV equalize placeholder
-        roi.copyTo(equalized_roi);
+        // HSV equalizer
+        // 1. split the original image into 3 hsv channels
+        cv::Mat hsv_values[3];
+        cv::split(roi, hsv_values);
+        std::vector<cv::Mat> channels = { hsv_values[0], hsv_values[1], hsv_values[2] };
+        // 2. equalize the image
+        cv::Mat hue_equalized;
+        cv::equalizeHist(channels[2], hue_equalized);
+        channels[2] = hue_equalized;
+        // 3. merge channels back together
+        cv:merge(channels, equalized_roi);
+        // 4. convert equalized ROI to BGR
+        hsv_to_bgr(equalized_roi, &equalized_roi);
+
+        hue_equalized.release();
         roi.release();
 
     }
