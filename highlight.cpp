@@ -22,6 +22,10 @@ const std::string WINDOW_NAME = "Highlight";
 std::string input_image;
 bool grayscale;
 
+const float dim_array[] = { 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, -111.11, -22.22, -11.11, 11.11, 22.22, 111.11, 0 };
+float dim_factor = 1;
+int slider_dim_value = 0;
+
 img_struct_t* og_image;
 cv::Mat displayed_image;
 cv::Mat hsv_image;
@@ -110,7 +114,7 @@ on_rect_complete()
     if (state.to_rect().area() == 0) return;
 
     // dim the image (in real_time)
-    cv::Mat roi, equalized_roi;
+    cv::Mat equalized_roi;
     if (grayscale) {
         // grayscale processing
 
@@ -118,13 +122,13 @@ on_rect_complete()
         og_image->image.copyTo(displayed_image); // comment this out to draw a bunch of rectangles!
 
         // save the region of interest
-        roi = extract_roi(displayed_image, state.to_rect());
+        cv::Mat roi = extract_roi(displayed_image, state.to_rect());
 
-        dim_grayscale_image(displayed_image, 0.75);
+        dim_grayscale_image(displayed_image, dim_factor);
 
         // equalize region of interest
         cv::equalizeHist(roi, equalized_roi);
-
+        roi.release();
     } else {
         // color processing (BGR -> HSV)
 
@@ -132,24 +136,36 @@ on_rect_complete()
         hsv_image.copyTo(displayed_image);
 
         // save the region of interest in HSV
-        roi = extract_roi(displayed_image, state.to_rect());
+        cv::Mat roi = extract_roi(displayed_image, state.to_rect());
 
         // HSV dimming placeholder
-        dim_hsv_image(displayed_image, 0.75);
-
-        // HSV equalize placeholder
-        roi.copyTo(equalized_roi);
+        dim_hsv_image(displayed_image, dim_factor);
 
         // displayed image back to BGR
         hsv_to_bgr(displayed_image, &displayed_image);
+
+        // HSV equalize placeholder
+        roi.copyTo(equalized_roi);
+        roi.release();
+
     }
 
     // insert ROI into displayed image
     equalized_roi.copyTo(displayed_image(state.to_rect()));
+    equalized_roi.release();
 
     // show the final product
     cv::imshow(WINDOW_NAME, displayed_image);
 
+}
+
+
+// trackbar for dim level
+static void
+on_trackbar_dim_level(int, void*)
+{
+    dim_factor = dim_array[slider_dim_value];
+    on_rect_complete();
 }
 
 
@@ -220,12 +236,16 @@ main(int argc, const char** argv)
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
+    cv::createTrackbar("Dim Level", WINDOW_NAME, &slider_dim_value, 16, on_trackbar_dim_level);
     cv::setMouseCallback(WINDOW_NAME, mouse_callback);
 
     // 'event loop' for keypresses
     while (wait_key());
 
     og_image->image.release();
+    delete og_image;
+
+    hsv_image.release();
     displayed_image.release();
 
     return 0;

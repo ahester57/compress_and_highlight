@@ -17,6 +17,7 @@ bgr_to_hsv(cv::Mat bgr, cv::Mat* hsv)
     cv::Mat tmp = cv::Mat::zeros(bgr.size(), bgr.type());
     cv::cvtColor(bgr, tmp, cv::COLOR_BGR2HSV);
     tmp.copyTo(*hsv);
+    tmp.release();
 }
 
 // convert an HSV image to BGR
@@ -27,4 +28,5 @@ hsv_to_bgr(cv::Mat hsv, cv::Mat* bgr)
     cv::Mat tmp = cv::Mat::zeros(hsv.size(), hsv.type());
     cv::cvtColor(hsv, tmp, cv::COLOR_HSV2BGR);
     tmp.copyTo(*bgr);
+    tmp.release();
 }
