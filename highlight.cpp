@@ -35,6 +35,7 @@ cv::Mat hsv_image;
 struct SelectionState {
     cv::Point selection_top_left, selection_bottom_right, mouse_pos;
     bool started = false, done = false;
+    uint step = 0;
 
     cv::Rect
     to_rect() {
@@ -53,6 +54,7 @@ struct SelectionState {
         this->mouse_pos = cv::Point(0, 0);
         this->started = false;
         this->done = false;
+        this->step = 0;
     }
 
 } state;
@@ -222,6 +224,8 @@ mouse_callback(int event, int x, int y, int, void*)
         case cv::EVENT_MOUSEMOVE:
             // don't listen for anything if not started
             if (!state.started) break;
+            // listen only every X times ( increase X if your PC is slow )
+            if (++state.step % 2 == 0) break;
 
             // only allow mouse_pos to handle changes inside display
             if (x < 0) x = 0; else if (x >= displayed_image.cols) x = displayed_image.cols - 1;
