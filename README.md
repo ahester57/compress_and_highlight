@@ -46,6 +46,11 @@ Usage: highlight.exe [params] filename
         filename (value:<none>)
                 input image
 
+Shortcuts:
+    s       - save image
+    c       - clear selection
+    q       - quit
+
 ```
 
 ----

@@ -22,6 +22,7 @@ const std::string WINDOW_NAME = "Highlight";
 std::string input_image;
 bool grayscale;
 
+// adjust dim_array values for some crazy backgrounds
 const float dim_array[] = { 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, -111.11, -22.22, -11.11, 111.11, 22.22, 11.11, 0 };
 float dim_factor = 1;
 int slider_dim_value = 0;
@@ -130,6 +131,7 @@ process_grayscale()
     return equalized_roi;
 }
 
+
 // color processing, return equalized ROI
 cv::Mat
 process_color()
@@ -140,13 +142,13 @@ process_color()
     // save the region of interest in HSV
     cv::Mat roi = extract_roi(displayed_image, state.to_rect());
 
-    // HSV dimming placeholder
+    // HSV dimming value channel
     dim_hsv_image(displayed_image, dim_factor);
 
     // displayed image back to BGR
     hsv_to_bgr(displayed_image, &displayed_image);
 
-    // HSV equalizer
+    // [] HSV equalizer
     cv::Mat equalized_roi;
 
     // 1. split the original image into 3 hsv channels
@@ -155,9 +157,9 @@ process_color()
     std::vector<cv::Mat> channels = { hsv_values[0], hsv_values[1], hsv_values[2] };
 
     // 2. equalize the image
-    cv::Mat hue_equalized;
-    cv::equalizeHist(channels[2], hue_equalized);
-    channels[2] = hue_equalized;
+    cv::Mat value_equalized;
+    cv::equalizeHist(channels[2], value_equalized);
+    channels[2] = value_equalized;
 
     // 3. merge channels back together
     cv:merge(channels, equalized_roi);
@@ -165,7 +167,7 @@ process_color()
     // 4. convert equalized ROI to BGR
     hsv_to_bgr(equalized_roi, &equalized_roi);
 
-    hue_equalized.release();
+    value_equalized.release();
     roi.release();
     return equalized_roi;
 }
@@ -274,10 +276,12 @@ main(int argc, const char** argv)
         bgr_to_hsv(displayed_image, &hsv_image);
     }
 
+    std::cout << "\nShortcuts:\n\ts\t- save image\n\tc\t- clear selection\n\tq\t- quit\n";
+
     // display the original image
     cv::imshow(WINDOW_NAME, displayed_image);
 
-    cv::createTrackbar("Dim Level", WINDOW_NAME, &slider_dim_value, 16, on_trackbar_dim_level);
+    cv::createTrackbar("Dim Level", WINDOW_NAME, &slider_dim_value, sizeof(dim_array)/sizeof(float)-1, on_trackbar_dim_level);
     cv::setMouseCallback(WINDOW_NAME, mouse_callback);
 
     // 'event loop' for keypresses
