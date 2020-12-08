@@ -12,6 +12,7 @@
 
 #include "./include/cla_parse.hpp"
 #include "./include/dir_func.hpp"
+#include "./include/huffman_tree_node.hpp"
 #include "./include/img_struct.hpp"
 #include "./include/string_helper.hpp"
 
@@ -26,46 +27,6 @@ img_struct_t* og_image;
 cv::Mat displayed_image;
 
 
-// holds code and length of code
-struct HuffmanCode {
-    uint length;
-    uint code;
-
-    std::string to_string() {
-        return std::bitset<64>( code ).to_string();
-    }
-};
-
-// holds symbol and its probability
-struct PixelProb {
-    uint symbol;
-    float probability;
-};
-
-// comparison function for struct PixelProb
-bool
-pixel_sorter(const PixelProb& a, const PixelProb& b)
-{
-    return a.probability < b.probability;
-}
-
-
-// compute probabilities
-PixelProb*
-compute_probabilities(cv::Mat histo)
-{
-    // get total pixels
-    uint num_pixels = displayed_image.rows * displayed_image.cols;
-    // get probabilities
-    PixelProb* probabilities = (PixelProb*) malloc(sizeof(PixelProb) * HIST_SIZE);
-    for ( uint h = 0; h < HIST_SIZE; h++ ) {
-        float binVal = histo.at<float>(h);
-        probabilities[h] = { h, binVal / num_pixels };
-    }
-    return probabilities;
-}
-
-
 // compute histogram
 cv::Mat
 compute_histogram(cv::Mat* img)
@@ -78,6 +39,48 @@ compute_histogram(cv::Mat* img)
     cv::Mat hist;
     cv::calcHist( img, 1, 0, cv::Mat(), hist, 1, &HIST_SIZE, &histRange, true, false );
     return hist;
+}
+
+
+// compute probabilities
+PixelProb*
+compute_probabilities(cv::Mat histo)
+{
+    // get total pixels
+    uint num_pixels = displayed_image.rows * displayed_image.cols;
+    // get probabilities
+    PixelProb* probabilities = (PixelProb*) malloc(sizeof(PixelProb) * HIST_SIZE);
+    for ( uint h = 0; h < HIST_SIZE; h++ ) {
+        probabilities[h] = { h,  histo.at<float>(h) / num_pixels };
+    }
+    return probabilities;
+}
+
+
+// sort by probability, removing 0 probability pixels
+// returning new size
+uint
+sort_and_filter_probabilities(PixelProb** probabilities, uint hist_size)
+{
+    // count zeros
+    uint num_zeros = 0;
+    for ( uint h = 0; h < hist_size; h++ ) {
+        if ( (*probabilities)[h].probability == 0 ) num_zeros++;
+    }
+    // allocate enough memory for nonzero symbols
+    PixelProb* filtered_probabilities = (PixelProb*) malloc( sizeof(PixelProb) * (hist_size-num_zeros) );
+    uint fp_index = 0;
+    for ( uint h = 0; h < hist_size; h++ ) {
+        if ( (*probabilities)[h].probability == 0 ) continue;
+        // deep copy non zero PixelProbs
+        filtered_probabilities[fp_index++] = { (*probabilities)[h].symbol, (*probabilities)[h].probability };
+    }
+    // delete probabilities and point it to the new list
+    delete *probabilities;
+    *probabilities = filtered_probabilities;
+    // pixel sorter in huffman_tree_node.hpp
+    std::sort( *probabilities, *probabilities + (hist_size-num_zeros), &pixel_sorter );
+    return HIST_SIZE - num_zeros;
 }
 
 
@@ -113,13 +116,15 @@ main(int argc, const char** argv)
     // get probabilities
     PixelProb* probabilities = compute_probabilities( histo );
 
+    assert(sizeof(probabilities) > 0);
+
     // sort by probability
-    std::sort(probabilities, probabilities + HIST_SIZE, &pixel_sorter);
+    uint new_hist_size = sort_and_filter_probabilities(&probabilities, HIST_SIZE);
+    std::cout << "Number of non-zero probability symbols: " << new_hist_size << std::endl;
 
     // display probs
-    for ( uint h = 0; h < HIST_SIZE; h++ ) {
-        float binVal = histo.at<float>(h);
-        std::cout<<probabilities[h].symbol<<": "<<probabilities[h].probability<<std::endl;
+    for ( uint h = 0; h < new_hist_size; h++ ) {
+        std::cout << probabilities[h].symbol << ": " << probabilities[h].probability << std::endl;
     }
 
     cv::waitKey(500); // splash screen
