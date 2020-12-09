@@ -88,3 +88,5 @@ Usage: huffman.exe [params] filename
                 input image
 
 ```
+
+https://github.com/ahester57/compress_and_highlight

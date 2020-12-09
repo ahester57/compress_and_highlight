@@ -79,11 +79,9 @@ sort_and_filter_probabilities(PixelProb** probabilities, uint hist_size)
     // delete probabilities and point it to the new list
     delete *probabilities;
     *probabilities = filtered_probabilities;
-    // pixel sorter in huffman_tree_node.hpp
-    std::sort( *probabilities, *probabilities + (hist_size-num_zeros), &pixel_sorter );
+    // return size of new list
     return HIST_SIZE - num_zeros;
 }
-
 
 
 // create a list of tree nodes, sorted by probability
@@ -91,7 +89,7 @@ HuffmanTreeNode**
 create_tree_node_list(PixelProb* probabilities, uint new_hist_size)
 {
     HuffmanTreeNode** tree_nodes = (HuffmanTreeNode**) malloc( sizeof(HuffmanTreeNode*) * new_hist_size );
-    // display probs
+    // create leaf nodes from pixel probabilities
     for ( uint i = 0; i < new_hist_size; i++ ) {
         tree_nodes[i] = build_leaf( probabilities[i] );
         // std::cout << tree_nodes[i]->pixel_prob.symbol << ": " << tree_nodes[i]->pixel_prob.probability << std::endl;
@@ -133,7 +131,7 @@ main(int argc, const char** argv)
     // get probabilities
     PixelProb* probabilities = compute_probabilities( histo );
 
-    assert(sizeof(probabilities) > 0);
+    assert( sizeof(probabilities) > 0 );
 
     // sort by probability
     uint new_hist_size = sort_and_filter_probabilities( &probabilities, HIST_SIZE );
@@ -142,11 +140,15 @@ main(int argc, const char** argv)
     // create a list of tree nodes, sorted by probability
     HuffmanTreeNode** leaf_nodes = create_tree_node_list( probabilities, new_hist_size );
 
+    // sort the tree nodes by probability
+    // pixel sorter in huffman_tree_node.hpp
+    std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
+
     for ( uint i = 0; i < new_hist_size; i++ ) {
         std::cout << leaf_nodes[i]->pixel_prob.symbol << ": " << leaf_nodes[i]->pixel_prob.probability << std::endl;
     }
 
-    cv::waitKey(500); // splash screen
+    cv::waitKey(999); // splash screen
 
     // cleanup
     histo.release();

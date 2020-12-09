@@ -1,4 +1,4 @@
-// huffman_tree_node.hpp : Convert color images to and from HSV
+// huffman_tree_node.hpp : Data Structures and sort functions for Huffman Tree
 // Austin Hester CS542o dec 2020
 // g++.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
 
@@ -9,7 +9,7 @@
 #include <iostream>
 
 
-// holds code and length of code
+// holds code and length of code (needed?)
 struct HuffmanCode {
     unsigned int length;
     unsigned int code;
@@ -36,20 +36,21 @@ pixel_sorter(const PixelProb& a, const PixelProb& b)
 };
 
 
+// The focal point of our Huffman Tree
 struct HuffmanTreeNode
 {
     PixelProb pixel_prob;
     unsigned int depth;
-    PixelProb* left;
-    PixelProb* right;
+    HuffmanTreeNode* left;
+    HuffmanTreeNode* right;
 };
 
 
 // comparison function for struct HuffmanTreeNode
 static bool
-huffman_heap_sorter(const HuffmanTreeNode& a, const HuffmanTreeNode& b)
+huffman_heap_sorter(const HuffmanTreeNode* a, const HuffmanTreeNode* b)
 {
-    return a.pixel_prob.probability < b.pixel_prob.probability;
+    return a->pixel_prob.probability < b->pixel_prob.probability;
 };
 
 
