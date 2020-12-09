@@ -31,3 +31,18 @@ combine_nodes(HuffmanTreeNode* node1, HuffmanTreeNode* node2)
     root->right = node2;
     return root;
 }
+
+
+// create a list of tree nodes, sorted by probability
+HuffmanTreeNode**
+create_tree_node_list(PixelProb* probabilities, int new_hist_size)
+{
+    HuffmanTreeNode** tree_nodes = (HuffmanTreeNode**) malloc( sizeof(HuffmanTreeNode*) * new_hist_size );
+    // create leaf nodes from pixel probabilities
+    for ( int i = 0; i < new_hist_size; i++ ) {
+        tree_nodes[i] = build_leaf( probabilities[i] );
+        // std::cout << tree_nodes[i]->pixel_prob.symbol << ": " << tree_nodes[i]->pixel_prob.probability << std::endl;
+
+    }
+    return tree_nodes;
+}
