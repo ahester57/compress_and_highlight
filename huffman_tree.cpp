@@ -27,7 +27,7 @@ combine_nodes(HuffmanTreeNode* node1, HuffmanTreeNode* node2)
 {
     HuffmanTreeNode* root = (HuffmanTreeNode*) malloc( sizeof(HuffmanTreeNode) );
     root->pixel_prob = { 999, node1->pixel_prob.probability + node2->pixel_prob.probability , { 0,0 } };
-    root->depth = node1->depth;
+    root->depth = node2->depth+1;
     root->left = node1;
     root->right = node2;
     return root;
@@ -46,4 +46,43 @@ create_leaf_node_list(PixelProb* probabilities, int new_hist_size)
     }
     std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
     return leaf_nodes;
+}
+
+
+void
+print_node(HuffmanTreeNode* node, std::string bit_string)
+{
+    // if (node->depth > 0)
+    //     printf("%*c", 20-node->depth*2, ' ');
+    printf("%d\t:\t%f\t:%s\n", node->pixel_prob.symbol, node->pixel_prob.probability, bit_string.c_str());
+}
+
+
+// inorder (overloaded internal function)
+void
+print_huffman_table(HuffmanTreeNode* root, std::string bit_string, unsigned int str_length)
+{
+    if (root == NULL)
+        return;
+    if (root->left == NULL && root->right == NULL) {
+        print_node(root, bit_string);
+        return;
+    }
+    print_huffman_table(root->left, bit_string+"0", str_length+1);
+    print_huffman_table(root->right, bit_string+"1", str_length+1);
+}
+
+
+// inorder
+void
+print_huffman_table(HuffmanTreeNode* root)
+{
+    if (root == NULL)
+        return;
+    if (root->left == NULL && root->right == NULL) {
+        print_node(root, "-");
+        return;
+    }
+    print_huffman_table(root->left, "0", 1);
+    print_huffman_table(root->right, "1", 1);
 }

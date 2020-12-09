@@ -146,10 +146,10 @@ main(int argc, const char** argv)
     // display the original image
     cv::imshow( WINDOW_NAME, og_image->image );
 
+    // get the root of the huffman code tree
     HuffmanTreeNode* root_node = process_huffman(og_image->image);
 
-    std::cout << root_node->pixel_prob.symbol << ": " << root_node->pixel_prob.probability << std::endl;
-    std::cout << root_node->left->left->left->pixel_prob.symbol << ": " << root_node->left->left->left->pixel_prob.probability << std::endl;
+    print_huffman_table( root_node );
 
     cv::waitKey(999); // splash screen
 
