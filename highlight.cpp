@@ -192,6 +192,8 @@ on_rect_complete()
             // deep copy original HSV to displayed_image
             hsv_image.copyTo(displayed_image);
             dim_hsv_image(displayed_image, dim_factor);
+            // displayed image back to BGR
+            hsv_to_bgr(displayed_image, &displayed_image);
         }
         cv::imshow(WINDOW_NAME, displayed_image);
         return;
