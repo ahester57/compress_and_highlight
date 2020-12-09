@@ -2,6 +2,7 @@
 // Austin Hester CS542o dec 2020
 // g++.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
 
+#include <algorithm>
 
 #include "./include/huffman_tree.hpp"
 #include "./include/huffman_tree_node.hpp"
@@ -35,14 +36,14 @@ combine_nodes(HuffmanTreeNode* node1, HuffmanTreeNode* node2)
 
 // create a list of tree nodes, sorted by probability
 HuffmanTreeNode**
-create_tree_node_list(PixelProb* probabilities, int new_hist_size)
+create_leaf_node_list(PixelProb* probabilities, int new_hist_size)
 {
-    HuffmanTreeNode** tree_nodes = (HuffmanTreeNode**) malloc( sizeof(HuffmanTreeNode*) * new_hist_size );
+    HuffmanTreeNode** leaf_nodes = (HuffmanTreeNode**) malloc( sizeof(HuffmanTreeNode*) * new_hist_size );
     // create leaf nodes from pixel probabilities
     for ( int i = 0; i < new_hist_size; i++ ) {
-        tree_nodes[i] = build_leaf( probabilities[i] );
+        leaf_nodes[i] = build_leaf( probabilities[i] );
         // std::cout << tree_nodes[i]->pixel_prob.symbol << ": " << tree_nodes[i]->pixel_prob.probability << std::endl;
-
     }
-    return tree_nodes;
+    std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
+    return leaf_nodes;
 }

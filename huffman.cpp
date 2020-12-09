@@ -76,7 +76,7 @@ filter_zero_probabilities(PixelProb** probabilities, uint hist_size)
 }
 
 
-void
+HuffmanTreeNode*
 process_huffman(cv::Mat img)
 {
     // compute histogram
@@ -95,23 +95,28 @@ process_huffman(cv::Mat img)
     std::cout << "Number of non-zero probability symbols: " << new_hist_size << std::endl;
 
     // create a list of tree nodes, sorted by probability
-    HuffmanTreeNode** leaf_nodes = create_tree_node_list( probabilities, new_hist_size );
+    HuffmanTreeNode** leaf_nodes = create_leaf_node_list( probabilities, new_hist_size );
 
     delete probabilities; // cleanup
 
-    // sort the tree nodes by probability
-    // pixel sorter in huffman_tree_node.hpp
-    std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
+    // Run Huffman Coding
+    uint heap_size = new_hist_size - 1;
+    do
+    {
+        // combine first two
+        // set first to combined root, second to NULL
+        leaf_nodes[heap_size-1] = combine_nodes( leaf_nodes[heap_size-1], leaf_nodes[heap_size] );
+        leaf_nodes[heap_size] = (HuffmanTreeNode*) NULL;
 
-    for ( uint i = 0; i < new_hist_size; i++ ) {
-        std::cout << leaf_nodes[i]->pixel_prob.symbol << ": " << leaf_nodes[i]->pixel_prob.probability << std::endl;
-    }
+        // sort the tree nodes by probability
+        delete leaf_nodes[heap_size]; // shift "left"
+        std::sort( leaf_nodes, leaf_nodes + heap_size, &huffman_heap_sorter );
 
-    // cleanup
-    for ( uint i = 0; i < new_hist_size; i++ ) {
-        delete leaf_nodes[i];
-    }
-    delete leaf_nodes;
+    } while ( --heap_size > 0 );
+
+    HuffmanTreeNode* root_node = leaf_nodes[0];
+    delete leaf_nodes; // cleanup
+    return root_node;
 }
 
 
@@ -141,11 +146,16 @@ main(int argc, const char** argv)
     // display the original image
     cv::imshow( WINDOW_NAME, og_image->image );
 
-    process_huffman(og_image->image);
+    HuffmanTreeNode* root_node = process_huffman(og_image->image);
+
+    std::cout << root_node->pixel_prob.symbol << ": " << root_node->pixel_prob.probability << std::endl;
+    std::cout << root_node->left->left->left->pixel_prob.symbol << ": " << root_node->left->left->left->pixel_prob.probability << std::endl;
 
     cv::waitKey(999); // splash screen
 
     // cleanup
     og_image->image.release();
+
+    delete root_node;
     return 0;
 }

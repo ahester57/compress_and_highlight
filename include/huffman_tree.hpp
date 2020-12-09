@@ -9,6 +9,6 @@
 
 HuffmanTreeNode* build_leaf(PixelProb pixel_prob);
 HuffmanTreeNode* combine_nodes(HuffmanTreeNode* node1, HuffmanTreeNode* node2);
-HuffmanTreeNode** create_tree_node_list(PixelProb* probabilities, int new_hist_size);
+HuffmanTreeNode** create_leaf_node_list(PixelProb* probabilities, int new_hist_size);
 
 #endif

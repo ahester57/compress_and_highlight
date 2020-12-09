@@ -50,7 +50,9 @@ struct HuffmanTreeNode
 static bool
 huffman_heap_sorter(const HuffmanTreeNode* a, const HuffmanTreeNode* b)
 {
-    return a->pixel_prob.probability < b->pixel_prob.probability;
+    if ( ( a == NULL && b == NULL ) || ( a == NULL && b != NULL ) ) return false;
+    if ( b == NULL ) return true;
+    return a->pixel_prob.probability > b->pixel_prob.probability;
 };
 
 
