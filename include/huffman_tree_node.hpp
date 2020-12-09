@@ -11,11 +11,11 @@
 
 // holds code and length of code (needed?)
 struct HuffmanCode {
-    unsigned int length;
     unsigned int code;
+    unsigned int length;
 
-    std::string to_string() {
-        return std::bitset<64>( code ).to_string();
+    std::bitset<32> to_bitset() {
+        return std::bitset<32>( code );
     }
 };
 
@@ -28,14 +28,6 @@ struct PixelProb {
 };
 
 
-// comparison function for struct PixelProb
-static bool
-pixel_sorter(const PixelProb& a, const PixelProb& b)
-{
-    return a.probability < b.probability;
-};
-
-
 // The focal point of our Huffman Tree
 struct HuffmanTreeNode
 {
@@ -43,6 +35,13 @@ struct HuffmanTreeNode
     unsigned int depth;
     HuffmanTreeNode* left;
     HuffmanTreeNode* right;
+
+    std::string
+    to_string(std::string tmp_bitstring_til_fixed) {
+        return std::to_string(pixel_prob.symbol) + "\t: " +
+                std::to_string(pixel_prob.probability) + "\t: " +
+                tmp_bitstring_til_fixed;
+    };
 };
 
 
@@ -50,8 +49,8 @@ struct HuffmanTreeNode
 static bool
 huffman_heap_sorter(const HuffmanTreeNode* a, const HuffmanTreeNode* b)
 {
-    if ( ( a == NULL && b == NULL ) || ( a == NULL && b != NULL ) ) return false;
-    if ( b == NULL ) return true;
+    if ( a == NULL ) return false; // { NULLs get pushed to back }
+    if ( b == NULL ) return true;  // {                          }
     return a->pixel_prob.probability > b->pixel_prob.probability;
 };
 

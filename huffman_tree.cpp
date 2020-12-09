@@ -42,7 +42,6 @@ create_leaf_node_list(PixelProb* probabilities, int new_hist_size)
     // create leaf nodes from pixel probabilities
     for ( int i = 0; i < new_hist_size; i++ ) {
         leaf_nodes[i] = build_leaf( probabilities[i] );
-        // std::cout << tree_nodes[i]->pixel_prob.symbol << ": " << tree_nodes[i]->pixel_prob.probability << std::endl;
     }
     std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
     return leaf_nodes;
@@ -52,37 +51,37 @@ create_leaf_node_list(PixelProb* probabilities, int new_hist_size)
 void
 print_node(HuffmanTreeNode* node, std::string bit_string)
 {
-    // if (node->depth > 0)
-    //     printf("%*c", 20-node->depth*2, ' ');
-    printf("%d\t:\t%f\t:%s\n", node->pixel_prob.symbol, node->pixel_prob.probability, bit_string.c_str());
+    std::cout << node->to_string(bit_string) << std::endl;
 }
 
 
-// inorder (overloaded internal function)
+// postorder (overloaded internal function)
 void
 print_huffman_table(HuffmanTreeNode* root, std::string bit_string, unsigned int str_length)
 {
     if (root == NULL)
         return;
     if (root->left == NULL && root->right == NULL) {
-        print_node(root, bit_string);
+        // root->pixel_prob.huffman_code = { bit_string, str_length };
+        print_node( root, bit_string );
         return;
     }
-    print_huffman_table(root->left, bit_string+"0", str_length+1);
-    print_huffman_table(root->right, bit_string+"1", str_length+1);
+    print_huffman_table( root->left, bit_string+"0", str_length+1 );
+    print_huffman_table( root->right, bit_string+"1", str_length+1 );
 }
 
 
-// inorder
+// postorder
 void
 print_huffman_table(HuffmanTreeNode* root)
 {
     if (root == NULL)
         return;
     if (root->left == NULL && root->right == NULL) {
-        print_node(root, "-");
+        // root->pixel_prob.huffman_code = { "N/A", 0 };
+        print_node( root , "N/A" );
         return;
     }
-    print_huffman_table(root->left, "0", 1);
-    print_huffman_table(root->right, "1", 1);
+    print_huffman_table( root->left, "0", 1 );
+    print_huffman_table( root->right, "1", 1 );
 }

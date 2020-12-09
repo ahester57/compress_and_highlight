@@ -44,7 +44,7 @@ compute_probabilities(cv::Mat histo, uint num_pixels)
     // get probabilities
     PixelProb* probabilities = (PixelProb*) malloc(sizeof(PixelProb) * HIST_SIZE);
     for ( uint i = 0; i < HIST_SIZE; i++ ) {
-        probabilities[i] = { i,  histo.at<float>(i) / num_pixels };
+        probabilities[i] = { i,  histo.at<float>(i) / num_pixels, { 0,0 } };
     }
     return probabilities;
 }
@@ -66,7 +66,7 @@ filter_zero_probabilities(PixelProb** probabilities, uint hist_size)
     for ( uint i = 0; i < hist_size; i++ ) {
         if ( (*probabilities)[i].probability == 0 ) continue;
         // deep copy non zero PixelProbs
-        filtered_probabilities[fp_index++] = { (*probabilities)[i].symbol, (*probabilities)[i].probability };
+        filtered_probabilities[fp_index++] = { (*probabilities)[i].symbol, (*probabilities)[i].probability, { 0,0 } };
     }
     // delete probabilities and point it to the new list
     delete *probabilities;
@@ -90,11 +90,12 @@ process_huffman(cv::Mat img)
 
     assert( sizeof(probabilities) > 0 );
 
-    // sort by probability
+
+    // filter out zero probabilities
     uint new_hist_size = filter_zero_probabilities( &probabilities, HIST_SIZE );
     std::cout << "Number of non-zero probability symbols: " << new_hist_size << std::endl;
 
-    // create a list of tree nodes, sorted by probability
+    // create a list of tree nodes, presorted by probability
     HuffmanTreeNode** leaf_nodes = create_leaf_node_list( probabilities, new_hist_size );
 
     delete probabilities; // cleanup
@@ -149,6 +150,7 @@ main(int argc, const char** argv)
     // get the root of the huffman code tree
     HuffmanTreeNode* root_node = process_huffman(og_image->image);
 
+    // and display it
     print_huffman_table( root_node );
 
     cv::waitKey(999); // splash screen
