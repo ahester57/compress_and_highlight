@@ -7,6 +7,6 @@
 
 #include "huffman_tree_node.hpp"
 
-HuffmanTreeNode* build_leaf(HuffmanCode code);
+HuffmanTreeNode* build_leaf(PixelProb pixel_prob);
 
 #endif

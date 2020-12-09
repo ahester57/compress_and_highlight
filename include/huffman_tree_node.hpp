@@ -9,10 +9,22 @@
 #include <iostream>
 
 
+// holds code and length of code
+struct HuffmanCode {
+    unsigned int length;
+    unsigned int code;
+
+    std::string to_string() {
+        return std::bitset<64>( code ).to_string();
+    }
+};
+
+
 // holds symbol and its probability
 struct PixelProb {
     unsigned int symbol;
     float probability;
+    HuffmanCode huffman_code;
 };
 
 
@@ -24,24 +36,20 @@ pixel_sorter(const PixelProb& a, const PixelProb& b)
 };
 
 
-// holds code and length of code
-struct HuffmanCode {
-    unsigned int length;
-    unsigned int code;
+struct HuffmanTreeNode
+{
     PixelProb pixel_prob;
-
-    std::string to_string() {
-        return std::bitset<64>( code ).to_string();
-    }
+    unsigned int depth;
+    PixelProb* left;
+    PixelProb* right;
 };
 
 
-struct HuffmanTreeNode
+// comparison function for struct HuffmanTreeNode
+static bool
+huffman_heap_sorter(const HuffmanTreeNode& a, const HuffmanTreeNode& b)
 {
-    HuffmanCode huffman_code;
-    unsigned int depth;
-    HuffmanCode* left;
-    HuffmanCode* right;
+    return a.pixel_prob.probability < b.pixel_prob.probability;
 };
 
 

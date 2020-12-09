@@ -20,10 +20,10 @@
 
 
 HuffmanTreeNode*
-initialize_node(HuffmanTreeNode* root, HuffmanCode code, unsigned int depth)
+initialize_node(HuffmanTreeNode* root, PixelProb pixel_prob, unsigned int depth)
 {
     root = (HuffmanTreeNode*) malloc( sizeof(HuffmanTreeNode) );
-    root->huffman_code = code;
+    root->pixel_prob = { pixel_prob.symbol, pixel_prob.probability, { 0,0 } };
     root->depth = depth;
     root->left = NULL;
     root->right = NULL;
@@ -32,11 +32,11 @@ initialize_node(HuffmanTreeNode* root, HuffmanCode code, unsigned int depth)
 
 
 HuffmanTreeNode*
-insert(HuffmanTreeNode* root, HuffmanCode code, unsigned int depth)
+insert(HuffmanTreeNode* root, PixelProb pixel_prob, unsigned int depth)
 {
     if (root == NULL) {
         // initialize a new node
-        root = initialize_node(root, code, depth);
+        root = initialize_node( root, pixel_prob, depth );
     }
     //  else if (len < root->length) {
     //     root->left = insert(root->left, word, ++level);
@@ -48,9 +48,9 @@ insert(HuffmanTreeNode* root, HuffmanCode code, unsigned int depth)
 
 
 HuffmanTreeNode*
-build_leaf(HuffmanCode code)
+build_leaf(PixelProb pixel_prob)
 {
     HuffmanTreeNode* root = NULL;
-    root = insert(root, code, 0);
+    root = insert( root, pixel_prob, 0 );
     return root;
 }
