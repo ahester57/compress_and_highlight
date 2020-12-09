@@ -21,12 +21,6 @@
 const std::string WINDOW_NAME = "Huffman";
 const int HIST_SIZE = 256;
 
-// CLA variable
-std::string input_image;
-
-img_struct_t* og_image;
-cv::Mat displayed_image;
-
 
 // compute histogram
 cv::Mat
@@ -45,10 +39,8 @@ compute_histogram(cv::Mat* img)
 
 // compute probabilities
 PixelProb*
-compute_probabilities(cv::Mat histo)
+compute_probabilities(cv::Mat histo, uint num_pixels)
 {
-    // get total pixels
-    uint num_pixels = displayed_image.rows * displayed_image.cols;
     // get probabilities
     PixelProb* probabilities = (PixelProb*) malloc(sizeof(PixelProb) * HIST_SIZE);
     for ( uint i = 0; i < HIST_SIZE; i++ ) {
@@ -61,7 +53,7 @@ compute_probabilities(cv::Mat histo)
 // sort by probability, removing 0 probability pixels
 // returning new size
 uint
-sort_and_filter_probabilities(PixelProb** probabilities, uint hist_size)
+filter_zero_probabilities(PixelProb** probabilities, uint hist_size)
 {
     // count zeros
     uint num_zeros = 0;
@@ -99,9 +91,50 @@ create_tree_node_list(PixelProb* probabilities, uint new_hist_size)
 }
 
 
+void
+process_huffman(cv::Mat img)
+{
+    // compute histogram
+    cv::Mat histo = compute_histogram( &img );
+
+    // get probabilities
+    PixelProb* probabilities = compute_probabilities( histo, img.rows * img.cols );
+
+    // cleanup
+    histo.release();
+
+    assert( sizeof(probabilities) > 0 );
+
+    // sort by probability
+    uint new_hist_size = filter_zero_probabilities( &probabilities, HIST_SIZE );
+    std::cout << "Number of non-zero probability symbols: " << new_hist_size << std::endl;
+
+    // create a list of tree nodes, sorted by probability
+    HuffmanTreeNode** leaf_nodes = create_tree_node_list( probabilities, new_hist_size );
+
+    delete probabilities; // cleanup
+
+    // sort the tree nodes by probability
+    // pixel sorter in huffman_tree_node.hpp
+    std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
+
+    for ( uint i = 0; i < new_hist_size; i++ ) {
+        std::cout << leaf_nodes[i]->pixel_prob.symbol << ": " << leaf_nodes[i]->pixel_prob.probability << std::endl;
+    }
+
+    // cleanup
+    for ( uint i = 0; i < new_hist_size; i++ ) {
+        delete leaf_nodes[i];
+    }
+    delete leaf_nodes;
+}
+
+
 int
 main(int argc, const char** argv)
 {
+    // CLA variable
+    std::string input_image;
 
     // parse and save command line args
     int parse_result = parse_arguments(
@@ -113,52 +146,21 @@ main(int argc, const char** argv)
 
     assert( input_image.length() > 0 );
 
+    img_struct_t* og_image;
+
     // open image, grayscale = true
     og_image = open_image( input_image.c_str(), true );
 
     assert( og_image != NULL );
 
-    // deep keep to displayed_image
-    og_image->image.copyTo( displayed_image );
-
     // display the original image
-    cv::imshow( WINDOW_NAME, displayed_image );
+    cv::imshow( WINDOW_NAME, og_image->image );
 
-
-    // compute histogram
-    cv::Mat histo = compute_histogram( &displayed_image );
-
-    // get probabilities
-    PixelProb* probabilities = compute_probabilities( histo );
-
-    assert( sizeof(probabilities) > 0 );
-
-    // sort by probability
-    uint new_hist_size = sort_and_filter_probabilities( &probabilities, HIST_SIZE );
-    std::cout << "Number of non-zero probability symbols: " << new_hist_size << std::endl;
-
-    // create a list of tree nodes, sorted by probability
-    HuffmanTreeNode** leaf_nodes = create_tree_node_list( probabilities, new_hist_size );
-
-    // sort the tree nodes by probability
-    // pixel sorter in huffman_tree_node.hpp
-    std::sort( leaf_nodes, leaf_nodes + new_hist_size, &huffman_heap_sorter );
-
-    for ( uint i = 0; i < new_hist_size; i++ ) {
-        std::cout << leaf_nodes[i]->pixel_prob.symbol << ": " << leaf_nodes[i]->pixel_prob.probability << std::endl;
-    }
+    process_huffman(og_image->image);
 
     cv::waitKey(999); // splash screen
 
     // cleanup
-    histo.release();
-    displayed_image.release();
     og_image->image.release();
-
-    delete probabilities;
-    for ( uint i = 0; i < new_hist_size; i++ ) {
-        delete leaf_nodes[i];
-    }
-    delete leaf_nodes;
     return 0;
 }

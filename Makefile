@@ -18,10 +18,10 @@ all: highlight huffman
 %.o: %.cpp $(DEPS)
 	${CC} -c $^ -I ${IDIR} -I ${IOPENCV}
 
-highlight: $(filter-out huffman.o, $(OBJECTS))
+highlight: $(filter-out huffman.o, $(OBJECTS)) # filter-out huffman to avoid main clash
 	$(CC) -o $@ $^ $(CFLAGS)
 
-huffman: $(filter-out highlight.o, $(OBJECTS))
+huffman: $(filter-out highlight.o, $(OBJECTS)) # filter-out highlight to avoid main clash
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
