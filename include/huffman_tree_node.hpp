@@ -28,6 +28,14 @@ struct PixelProb {
 };
 
 
+// comparison function for struct PixelProb
+static bool
+pixel_sorter(const PixelProb& a, const PixelProb& b)
+{
+    return a.probability < b.probability;
+};
+
+
 // The focal point of our Huffman Tree
 struct HuffmanTreeNode
 {

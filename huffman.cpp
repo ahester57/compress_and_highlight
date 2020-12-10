@@ -26,6 +26,7 @@ const int HIST_SIZE = 256;
 cv::Mat
 compute_histogram(cv::Mat* img)
 {
+    assert( img != NULL );
     int channels[] = { 0 };
     float range[] = { 0, (float) HIST_SIZE }; // the upper boundary is exclusive
     const float* histRange = { range };
@@ -55,11 +56,13 @@ compute_probabilities(cv::Mat histo, uint num_pixels)
 uint
 filter_zero_probabilities(PixelProb** probabilities, uint hist_size)
 {
+    assert( probabilities != NULL );
     // count zeros
     uint num_zeros = 0;
     for ( uint i = 0; i < hist_size; i++ ) {
         if ( (*probabilities)[i].probability == 0 ) num_zeros++;
     }
+
     // allocate enough memory for nonzero symbols
     PixelProb* filtered_probabilities = (PixelProb*) malloc( sizeof(PixelProb) * (hist_size-num_zeros) );
     uint fp_index = 0;
@@ -68,9 +71,13 @@ filter_zero_probabilities(PixelProb** probabilities, uint hist_size)
         // deep copy non zero PixelProbs
         filtered_probabilities[fp_index++] = { (*probabilities)[i].symbol, (*probabilities)[i].probability, { 0,0 } };
     }
+
     // delete probabilities and point it to the new list
-    delete *probabilities;
+    free( *probabilities );
     *probabilities = filtered_probabilities;
+
+    uint new_hist_size = HIST_SIZE - num_zeros;
+    std::sort( filtered_probabilities, filtered_probabilities + new_hist_size, &pixel_sorter );
     // return size of new list
     return HIST_SIZE - num_zeros;
 }
@@ -90,15 +97,19 @@ process_huffman(cv::Mat img)
 
     assert( sizeof(probabilities) > 0 );
 
-
     // filter out zero probabilities
     uint new_hist_size = filter_zero_probabilities( &probabilities, HIST_SIZE );
-    std::cout << "Number of non-zero probability symbols: " << new_hist_size << std::endl;
+
+    std::cout << "\nNumber of non-zero probability symbols: " << new_hist_size << std::endl;
+        for ( uint i = 0; i < new_hist_size; i++ ) {
+        if (probabilities[i].probability == 0 ) continue;
+        std::cout << probabilities[i].symbol << "\t: " << probabilities[i].probability << std::endl;
+    }
 
     // create a list of tree nodes, presorted by probability
     HuffmanTreeNode** leaf_nodes = create_leaf_node_list( probabilities, new_hist_size );
 
-    delete probabilities; // cleanup
+    free( probabilities ); // cleanup
 
     // Run Huffman Coding
     uint heap_size = new_hist_size - 1;
@@ -110,13 +121,13 @@ process_huffman(cv::Mat img)
         leaf_nodes[heap_size] = (HuffmanTreeNode*) NULL;
 
         // sort the tree nodes by probability
-        delete leaf_nodes[heap_size]; // shift "left"
+        free( leaf_nodes[heap_size] ); // shift "left"
         std::sort( leaf_nodes, leaf_nodes + heap_size, &huffman_heap_sorter );
 
     } while ( --heap_size > 0 );
 
     HuffmanTreeNode* root_node = leaf_nodes[0];
-    delete leaf_nodes; // cleanup
+    free( leaf_nodes ); // cleanup
     return root_node;
 }
 
@@ -153,11 +164,10 @@ main(int argc, const char** argv)
     // and display it
     print_huffman_table( root_node );
 
-    cv::waitKey(999); // splash screen
+    cv::waitKey(9999); // splash screen
 
     // cleanup
     og_image->image.release();
-
-    delete root_node;
+    free( root_node );
     return 0;
 }

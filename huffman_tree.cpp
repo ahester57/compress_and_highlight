@@ -3,6 +3,7 @@
 // g++.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
 
 #include <algorithm>
+#include <assert.h>
 
 #include "./include/huffman_tree.hpp"
 #include "./include/huffman_tree_node.hpp"
@@ -25,6 +26,7 @@ build_leaf(PixelProb pixel_prob)
 HuffmanTreeNode*
 combine_nodes(HuffmanTreeNode* node1, HuffmanTreeNode* node2)
 {
+    assert( node1 != NULL &&  node2 != NULL );
     HuffmanTreeNode* root = (HuffmanTreeNode*) malloc( sizeof(HuffmanTreeNode) );
     root->pixel_prob = { 999, node1->pixel_prob.probability + node2->pixel_prob.probability , { 0,0 } };
     root->depth = node2->depth+1;
@@ -36,8 +38,9 @@ combine_nodes(HuffmanTreeNode* node1, HuffmanTreeNode* node2)
 
 // create a list of tree nodes, sorted by probability
 HuffmanTreeNode**
-create_leaf_node_list(PixelProb* probabilities, int new_hist_size)
+create_leaf_node_list(PixelProb* probabilities, unsigned int new_hist_size)
 {
+    assert( probabilities != NULL );
     HuffmanTreeNode** leaf_nodes = (HuffmanTreeNode**) malloc( sizeof(HuffmanTreeNode*) * new_hist_size );
     // create leaf nodes from pixel probabilities
     for ( int i = 0; i < new_hist_size; i++ ) {
@@ -51,6 +54,7 @@ create_leaf_node_list(PixelProb* probabilities, int new_hist_size)
 void
 print_node(HuffmanTreeNode* node, std::string bit_string)
 {
+    assert( node != NULL );
     std::cout << node->to_string(bit_string) << std::endl;
 }
 
@@ -59,8 +63,7 @@ print_node(HuffmanTreeNode* node, std::string bit_string)
 void
 print_huffman_table(HuffmanTreeNode* root, std::string bit_string, unsigned int str_length)
 {
-    if (root == NULL)
-        return;
+    if (root == NULL) return;
     if (root->left == NULL && root->right == NULL) {
         // root->pixel_prob.huffman_code = { bit_string, str_length };
         print_node( root, bit_string );
@@ -75,13 +78,10 @@ print_huffman_table(HuffmanTreeNode* root, std::string bit_string, unsigned int 
 void
 print_huffman_table(HuffmanTreeNode* root)
 {
-    if (root == NULL)
-        return;
-    if (root->left == NULL && root->right == NULL) {
-        // root->pixel_prob.huffman_code = { "N/A", 0 };
-        print_node( root , "N/A" );
-        return;
-    }
+    assert( root != NULL );
+    assert( root->left != NULL && root->right != NULL); // not ftrue huffman table if not
+
+    std::cout << "\nHuffman codes: " << std::endl;
     print_huffman_table( root->left, "0", 1 );
     print_huffman_table( root->right, "1", 1 );
 }
