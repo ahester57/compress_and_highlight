@@ -20,7 +20,7 @@ all: highlight huffman
 
 highlight: $(filter-out huffman.o, $(OBJECTS)) # filter-out huffman to avoid main clash
 	$(CC) -o $@ $^ $(CFLAGS)
-
+# might be better to use build flags
 huffman: $(filter-out highlight.o, $(OBJECTS)) # filter-out highlight to avoid main clash
 	$(CC) -o $@ $^ $(CFLAGS)
 

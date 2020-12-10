@@ -46,9 +46,7 @@ struct HuffmanTreeNode
 
     std::string
     to_string(std::string tmp_bitstring_til_fixed) {
-        return std::to_string(pixel_prob.symbol) + "\t: " +
-                std::to_string(pixel_prob.probability) + "\t: " +
-                tmp_bitstring_til_fixed;
+        return std::to_string(pixel_prob.symbol) + "\t: " + tmp_bitstring_til_fixed;
     };
 };
 

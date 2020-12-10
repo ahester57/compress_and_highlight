@@ -199,7 +199,7 @@ on_rect_complete()
         return;
     }
 
-    // dim the image (in real_time)
+    // equalize the ROI (in real_time)
     cv::Mat equalized_roi;
     if (grayscale) {
         // grayscale processing
