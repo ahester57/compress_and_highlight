@@ -155,6 +155,12 @@ main(int argc, const char** argv)
 
     assert( og_image != NULL );
 
+    bool three_bit = true;
+    if (three_bit) {
+        og_image->image /= 32;
+        og_image->image *= 32;
+    }
+
     // display the original image
     cv::imshow( WINDOW_NAME, og_image->image );
 
